@@ -4,7 +4,7 @@ project(rose_footprint_collision_checker)
 find_package(catkin 
 	REQUIRED 
 	COMPONENTS
-        clipper
+        ros_clipper
         roscpp
         rose_conversions
         rose_generic_platform
@@ -22,7 +22,7 @@ catkin_package(
     LIBRARIES 
         rose_footprint_collision_checker 
     CATKIN_DEPENDS 
-        clipper 
+        ros_clipper 
         rose_conversions
         rose_generic_platform
         rose_geometry
