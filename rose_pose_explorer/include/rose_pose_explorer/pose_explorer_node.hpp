@@ -18,6 +18,6 @@
 #include <iostream>
 #include <stdio.h>
 
-#include "pose_explorer.hpp"
+#include "rose_pose_explorer/pose_explorer.hpp"
 
 #endif // POSE_EXPLORER_NODE_HPP

@@ -10,7 +10,7 @@
 *    description
 * 
 ***********************************************************************************/
-#include "pose_explorer_node.hpp"
+#include "rose_pose_explorer/pose_explorer_node.hpp"
 
 int main( int argc, char **argv )
 {

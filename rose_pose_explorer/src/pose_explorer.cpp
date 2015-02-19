@@ -19,7 +19,7 @@
 * Output: A vector of possible poses.
 * 
 ***********************************************************************************/
-#include "pose_explorer.hpp"
+#include "rose_pose_explorer/pose_explorer.hpp"
 
 PoseExplorer::PoseExplorer( std::string name, ros::NodeHandle n )
 	: name_ (name)
