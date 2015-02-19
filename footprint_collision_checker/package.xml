@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package>
+  <name>footprint_collision_checker</name>
+  <version>0.0.0</version>
+  <description>The footprint_collision_checker package</description>
+  <maintainer email="hendriks@robot-rose.nl">Okke Hendriks</maintainer>
+
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>clipper</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rose_conversions</build_depend>
+  <build_depend>rose_generic_platform</build_depend>
+  <build_depend>rose_geometry</build_depend>
+  <build_depend>rose_transformations</build_depend>
+  <build_depend>tf</build_depend>
+
+  <run_depend>clipper</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>rose_conversions</run_depend>
+  <run_depend>rose_generic_platform</run_depend>
+  <run_depend>rose_geometry</run_depend>
+  <run_depend>rose_transformations</run_depend>
+  <run_depend>tf</run_depend>
+
+  <export>
+
+  </export>
+</package>

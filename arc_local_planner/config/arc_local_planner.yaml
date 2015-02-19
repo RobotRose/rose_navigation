@@ -1,0 +1,12 @@
+# The cost function used while the arc local planner is in the DRIVE state is defined as follows: 
+# ( (distance_w * distance over path) * (clearance_w * (1/minimal_sq_clearance)) ) + (difference_w * difference in radius between two arc's)
+# With the 3 measured values individually normalized between 0 and 1.
+cost_function_weights:
+
+    # Distance over global path score
+    distance: 1.0
+
+    # Clearance towards obstacles score
+    clearance: 0.75
+    # Arc difference cost
+    difference: 2.0

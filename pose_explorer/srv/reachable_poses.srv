@@ -1,0 +1,4 @@
+sensor_msgs/PointCloud target_points
+sensor_msgs/PointCloud allowed_points 
+---
+geometry_msgs/PoseStamped[]  reachable_points

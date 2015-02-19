@@ -1,0 +1,9 @@
+# Goal
+geometry_msgs/PoseStamped       reference_pose
+---
+# Result
+int32                           return_code
+int32                           error_code
+---
+# Feedback
+geometry_msgs/Twist             cmd_vel
