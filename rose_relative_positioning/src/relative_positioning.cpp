@@ -12,7 +12,7 @@
 * 
 ***********************************************************************************/
 
-#include "relative_positioning/relative_positioning.hpp"
+#include "rose_relative_positioning/relative_positioning.hpp"
 
 RelativePositioning::RelativePositioning(ros::NodeHandle n, std::string name)
     : n_(n)

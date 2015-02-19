@@ -12,7 +12,7 @@
 * 
 ***********************************************************************************/
 
-#include "relative_positioning/relative_positioning_node.hpp"
+#include "rose_relative_positioning/relative_positioning_node.hpp"
 
 int main(int argc, char** argv)
 {

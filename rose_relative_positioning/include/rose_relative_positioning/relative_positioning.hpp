@@ -31,10 +31,10 @@
 #include "rose_geometry/geometry.hpp"
 #include "rose_transformations/transformations.hpp"
 
-#include "relative_positioning/relative_positioningAction.h"
-#include "relative_positioning/relative_positioningActionGoal.h"
-#include "relative_positioning/relative_positioningActionResult.h"
-#include "relative_positioning/relative_positioningActionFeedback.h"
+#include "rose_relative_positioning/relative_positioningAction.h"
+#include "rose_relative_positioning/relative_positioningActionGoal.h"
+#include "rose_relative_positioning/relative_positioningActionResult.h"
+#include "rose_relative_positioning/relative_positioningActionFeedback.h"
 
 #define XY_CONVERGE_DIST        0.005
 #define YAW_CONVERGE_ANGLE      0.04
@@ -44,7 +44,7 @@
 #define GOAL_MIN_VEL_DIST   0.05 //< Distance where the robot should be at lowest speed driving to goal
 #define GOAL_MAX_VEL_DIST   0.30  //< Distance where the robot should be at lowest speed driving to goal
 
-using namespace shared_variables;
+using namespace shared_variables;   //! @todo OH [LANG]: No using namespaces!
 
 class RelativePositioning
 {

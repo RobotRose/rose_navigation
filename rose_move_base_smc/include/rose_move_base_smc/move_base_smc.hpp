@@ -21,11 +21,11 @@
 #include "rose_base_msgs/cmd_velocityActionResult.h"
 #include "rose_base_msgs/cmd_velocityActionFeedback.h"
 
-#include "relative_positioning/relative_positioning.hpp"
-#include "relative_positioning/relative_positioningAction.h"
-#include "relative_positioning/relative_positioningActionGoal.h"
-#include "relative_positioning/relative_positioningActionResult.h"
-#include "relative_positioning/relative_positioningActionFeedback.h"
+#include "rose_relative_positioning/relative_positioning.hpp"
+#include "rose_relative_positioning/relative_positioningAction.h"
+#include "rose_relative_positioning/relative_positioningActionGoal.h"
+#include "rose_relative_positioning/relative_positioningActionResult.h"
+#include "rose_relative_positioning/relative_positioningActionFeedback.h"
 
 #define SERVER_RESULT_CLIENTS_TIMEOUT 	0.5
 

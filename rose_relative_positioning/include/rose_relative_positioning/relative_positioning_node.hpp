@@ -15,8 +15,6 @@
 #ifndef RELATIVE_POSITIONING_NODE_HPP
 #define RELATIVE_POSITIONING_NODE_HPP
 
-#include "relative_positioning/relative_positioning.hpp"
-
-
+#include "rose_relative_positioning/relative_positioning.hpp"
 
 #endif //RELATIVE_POSITIONING_NODE_HPP

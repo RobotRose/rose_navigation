@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(relative_positioning)
+project(rose_relative_positioning)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -23,10 +23,6 @@ find_package(catkin REQUIRED COMPONENTS
         )
 
 
-include_directories(
-    include
-    ${catkin_INCLUDE_DIRS}
-)
 
 add_action_files( DIRECTORY action 
     FILES 
@@ -59,30 +55,38 @@ catkin_package(
   LIBRARIES
   CATKIN_DEPENDS  
         actionlib_msgs
+        dynamic_reconfigure
         geometry_msgs
         operator_messaging
         roscomm
         roscpp
         rose_conversions
-        rose_generic_platform   
+        rose_generic_platform
         rose_geometry
         rose_transformations
+        rostest
         server_multiple_client
         shared_variables
         std_msgs
-        tf  
+        tf
   DEPENDS
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++0x -g") # TODO OH: -g is DEBUG FLAG
 
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+)
 
-add_executable( relative_positioning
+add_executable( rose_relative_positioning
                 src/relative_positioning.cpp
-                src/relative_positioning_node.cpp)
-add_dependencies(relative_positioning ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+                src/relative_positioning_node.cpp
+)
 
-target_link_libraries(relative_positioning
+add_dependencies(rose_relative_positioning ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+
+target_link_libraries(rose_relative_positioning
     ${catkin_LIBRARIES}
-    )
+)
 
