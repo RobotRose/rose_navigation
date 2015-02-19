@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <name>rose_navigation</name>
+  <version>0.0.1</version>
+  <description>The rose_navigation meta-package</description>
+
+  <author email="hendriks@robot-rose.nl">Okke Hendriks</author>
+  <maintainer email="hendriks@robot-rose.nl">Okke Hendriks</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rose_arc_local_planner</run_depend>
+  <run_depend>rose_costmap_2d_plugins</run_depend>
+  <run_depend>rose_footprint_collision_checker</run_depend>
+  <run_depend>rose_move_base_smc</run_depend>
+  <run_depend>rose_pose_explorer</run_depend>
+  <run_depend>rose_relative_positioning</run_depend>
+
+  <export>
+    <metapackage />
+  </export>
+</package>
