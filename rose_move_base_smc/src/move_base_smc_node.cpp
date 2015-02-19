@@ -11,14 +11,14 @@
 * 
 ***********************************************************************************/
 
-#include <move_base_smc/move_base_smc_node.hpp>
+#include <rose_move_base_smc/move_base_smc_node.hpp>
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "move_base_smc");
+	ros::init(argc, argv, "rose_move_base_smc");
 	ros::NodeHandle n;
 
-	MoveBaseSMC move_base_smc(n, "move_base_smc");
+	MoveBaseSMC move_base_smc(n, "rose_move_base_smc");
 
 	ros::spin();
 

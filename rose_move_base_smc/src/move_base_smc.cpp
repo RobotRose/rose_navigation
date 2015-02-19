@@ -13,7 +13,7 @@
 * 
 ***********************************************************************************/
 
-#include "move_base_smc/move_base_smc.hpp"
+#include "rose_move_base_smc/move_base_smc.hpp"
 
 MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
 	: n_(n)
@@ -47,12 +47,12 @@ MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
     smc_->startServer();
 
     // Initialize subscribers
-    move_base_simple_goal_sub_ 	= n_.subscribe("/move_base_smc/simple_goal", 10, &MoveBaseSMC::CB_simpleGoal, this);
+    move_base_simple_goal_sub_ 	= n_.subscribe("/rose_move_base_smc/simple_goal", 10, &MoveBaseSMC::CB_simpleGoal, this);
     cmd_vel_sub_		 		= n_.subscribe("/cmd_vel", 10, &MoveBaseSMC::CB_commandVelocity, this);
     manual_cmd_vel_sub_			= n_.subscribe("/manual_cmd_vel", 10, &MoveBaseSMC::CB_manualCommandVelocity, this);
 
     // Initialize publishers
-    drivetrain_state_pub_     	= n_.advertise<std_msgs::Int32>("/move_base_smc/drivetrain_state", 1);
+    drivetrain_state_pub_     	= n_.advertise<std_msgs::Int32>("/rose_move_base_smc/drivetrain_state", 1);
 
 	// Monitor the low-level platform controller alarm state
 	sh_platform_controller_alarm_.connect(ros::Duration(0.1));
