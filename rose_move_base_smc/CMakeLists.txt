@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
             pluginlib
             rose_relative_positioning
             server_multiple_client
-            shared_variables
+            rose_shared_variables
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++0x -g") # TODO OH: -g is DEBUG FLAG
@@ -33,7 +33,7 @@ catkin_package(
     nav_core      
     move_base
     rose_relative_positioning
-    shared_variables
+    rose_shared_variables
   DEPENDS 
 )
 

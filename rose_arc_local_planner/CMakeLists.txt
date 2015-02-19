@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
             rose_twist_moving_average_filter
             rostest
             server_multiple_client
-            shared_variables
+            rose_shared_variables
             std_msgs
             tf
             visualization_msgs
@@ -49,7 +49,7 @@ catkin_package(
         rose_twist_moving_average_filter
         rostest
         server_multiple_client
-        shared_variables
+        rose_shared_variables
         std_msgs
         tf
         visualization_msgs

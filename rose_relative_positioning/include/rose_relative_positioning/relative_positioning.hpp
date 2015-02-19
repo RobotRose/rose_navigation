@@ -23,7 +23,7 @@
 #include "server_multiple_client/server_multiple_client.hpp"
 #include "action_result_message.hpp"
 
-#include "shared_variables/shared_variable.hpp"
+#include "rose_shared_variables/shared_variable.hpp"
 #include "operator_messaging/operator_messaging.hpp"
 
 #include "rose_generic_platform/generic_platform.hpp"
@@ -44,7 +44,7 @@
 #define GOAL_MIN_VEL_DIST   0.05 //< Distance where the robot should be at lowest speed driving to goal
 #define GOAL_MAX_VEL_DIST   0.30  //< Distance where the robot should be at lowest speed driving to goal
 
-using namespace shared_variables;   //! @todo OH [LANG]: No using namespaces!
+using namespace rose_shared_variables;   //! @todo OH [LANG]: No using namespaces!
 
 class RelativePositioning
 {

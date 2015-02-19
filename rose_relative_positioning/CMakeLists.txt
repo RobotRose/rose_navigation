@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
             rose_geometry
             rose_transformations
             server_multiple_client
-            shared_variables
+            rose_shared_variables
             std_msgs
             tf
         )
@@ -65,7 +65,7 @@ catkin_package(
         rose_geometry
         rose_transformations
         server_multiple_client
-        shared_variables
+        rose_shared_variables
         std_msgs
         tf
   DEPENDS

@@ -14,7 +14,7 @@
 #include "server_multiple_client/server_multiple_client.hpp"
 #include "operator_messaging/operator_messaging.hpp"
 
-#include "shared_variables/shared_variable.hpp"
+#include "rose_shared_variables/shared_variable.hpp"
 
 #include "rose_base_msgs/cmd_velocityAction.h"
 #include "rose_base_msgs/cmd_velocityActionGoal.h"
@@ -30,7 +30,7 @@
 #define SERVER_RESULT_CLIENTS_TIMEOUT 	0.5
 
 using namespace std; 
-using namespace shared_variables;
+using namespace rose_shared_variables;
 
 class MoveBaseSMC
 {
