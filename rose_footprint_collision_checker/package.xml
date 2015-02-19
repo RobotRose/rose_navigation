@@ -8,8 +8,8 @@
   <license>TODO</license>
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>clipper</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>ros_clipper</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rose_conversions</build_depend>
   <build_depend>rose_generic_platform</build_depend>
@@ -17,8 +17,8 @@
   <build_depend>rose_transformations</build_depend>
   <build_depend>tf</build_depend>
 
-  <run_depend>clipper</run_depend>
   <run_depend>geometry_msgs</run_depend>
+  <run_depend>ros_clipper</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rose_conversions</run_depend>
   <run_depend>rose_generic_platform</run_depend>
