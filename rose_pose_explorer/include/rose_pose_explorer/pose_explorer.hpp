@@ -33,7 +33,7 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include "pose_explorer/reachable_poses.h"
+#include "rose_pose_explorer/reachable_poses.h"
 #include "rose_common/common.hpp"
 #include "rose_geometry/geometry.hpp"
 
