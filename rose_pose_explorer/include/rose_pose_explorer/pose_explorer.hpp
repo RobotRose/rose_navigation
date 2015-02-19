@@ -59,8 +59,8 @@ class PoseExplorer
     Point32             projectPointOnPoint( const Point32 allowed, const Point32 target );
 
     void transformToBaselink( PointCloud& point_cloud );
-    bool CB_calculateReachability ( pose_explorer::reachable_poses::Request  &req, 
-                                    pose_explorer::reachable_poses::Response &res );
+    bool CB_calculateReachability ( rose_pose_explorer::reachable_poses::Request  &req, 
+                                    rose_pose_explorer::reachable_poses::Response &res );
 
     // Visulization
     void        createMarkerPublishers();

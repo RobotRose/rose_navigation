@@ -38,7 +38,7 @@ MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
 		NULL, 
 		boost::bind(&MoveBaseSMC::CB_driveControllerFeedback, this, _1));
 
-    smc_->addClient<relative_positioning::relative_positioningAction>("relative_positioning",
+    smc_->addClient<rose_relative_positioning::relative_positioningAction>("relative_positioning",
     	boost::bind(&MoveBaseSMC::CB_relative_positioningSuccess, this, _1, _2),
 		boost::bind(&MoveBaseSMC::CB_relative_positioningFail, this, _1, _2),
 		NULL, 
@@ -108,10 +108,10 @@ void MoveBaseSMC::sendGoal(const move_base_msgs::MoveBaseGoal& goal_to_send)
 		// Could be that the previous goal was a relative goal therfore cancel the move_base, if it did not had a goal notthing happens
 		smc_->cancelClient("move_base");
 
-		relative_positioning::relative_positioningGoal relative_positioning_goal;
+		rose_relative_positioning::relative_positioningGoal relative_positioning_goal;
 		relative_positioning_goal.reference_pose = goal_to_send.target_pose;
 		//! @todo OH: if not issue #580
-		smc_->sendGoal<relative_positioning::relative_positioningAction>(relative_positioning_goal, "relative_positioning");
+		smc_->sendGoal<rose_relative_positioning::relative_positioningAction>(relative_positioning_goal, "relative_positioning");
 	}
 }
 
@@ -229,7 +229,7 @@ void MoveBaseSMC::CB_driveControllerFeedback(const rose_base_msgs::cmd_velocityF
 }
 
 
-void MoveBaseSMC::CB_relative_positioningSuccess(const actionlib::SimpleClientGoalState& state, const relative_positioning::relative_positioningResultConstPtr& client_result)
+void MoveBaseSMC::CB_relative_positioningSuccess(const actionlib::SimpleClientGoalState& state, const rose_relative_positioning::relative_positioningResultConstPtr& client_result)
 {
 	ROS_DEBUG_NAMED(ROS_NAME, "CB_relative_positioningSuccess");
 	ROS_DEBUG_NAMED(ROS_NAME, "Succesfully positioned robot using relative positioning.");
@@ -238,7 +238,7 @@ void MoveBaseSMC::CB_relative_positioningSuccess(const actionlib::SimpleClientGo
 	smc_->sendServerResult(true, server_result, ros::Duration(SERVER_RESULT_CLIENTS_TIMEOUT));	//! @todo OH: Move base smc needs own action with usefull result
 }
 
-void MoveBaseSMC::CB_relative_positioningFail(const actionlib::SimpleClientGoalState& state, const relative_positioning::relative_positioningResultConstPtr& client_result)
+void MoveBaseSMC::CB_relative_positioningFail(const actionlib::SimpleClientGoalState& state, const rose_relative_positioning::relative_positioningResultConstPtr& client_result)
 {
 	ROS_DEBUG_NAMED(ROS_NAME, "CB_relative_positioningFail");
 	ROS_WARN_NAMED(ROS_NAME, "Error while trying to position robot using relative positioning.");
@@ -247,7 +247,7 @@ void MoveBaseSMC::CB_relative_positioningFail(const actionlib::SimpleClientGoalS
 	smc_->sendServerResult(false, server_result, ros::Duration(SERVER_RESULT_CLIENTS_TIMEOUT));	//! @todo OH: Move base smc needs own action with usefull result
 }
 
-void MoveBaseSMC::CB_relative_positioningFeedback(const relative_positioning::relative_positioningFeedbackConstPtr& feedback)
+void MoveBaseSMC::CB_relative_positioningFeedback(const rose_relative_positioning::relative_positioningFeedbackConstPtr& feedback)
 {
 	ROS_DEBUG_NAMED(ROS_NAME, "CB_relative_positioningFeedback");
 	sendDriveControllerGoal(feedback->cmd_vel);

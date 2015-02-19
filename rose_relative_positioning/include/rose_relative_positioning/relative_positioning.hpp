@@ -49,13 +49,13 @@ using namespace shared_variables;   //! @todo OH [LANG]: No using namespaces!
 class RelativePositioning
 {
   protected:
-    typedef ServerMultipleClient<relative_positioning::relative_positioningAction> SMC;
+    typedef ServerMultipleClient<rose_relative_positioning::relative_positioningAction> SMC;
 
   public:
     RelativePositioning(ros::NodeHandle n, std::string name);
     ~RelativePositioning();
 
-    void CB_relativePositioningGoalReceived(const relative_positioning::relative_positioningGoalConstPtr& goal, SMC* smc);
+    void CB_relativePositioningGoalReceived(const rose_relative_positioning::relative_positioningGoalConstPtr& goal, SMC* smc);
 
     bool calculateCommandVelocity(const geometry_msgs::PoseStamped reference_pose);
 

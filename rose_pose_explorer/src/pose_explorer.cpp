@@ -39,8 +39,8 @@ PoseExplorer::~PoseExplorer()
 	
 }
 
-bool PoseExplorer::CB_calculateReachability ( pose_explorer::reachable_poses::Request  &req,	
-											  pose_explorer::reachable_poses::Response &res )
+bool PoseExplorer::CB_calculateReachability ( rose_pose_explorer::reachable_poses::Request  &req,	
+											  rose_pose_explorer::reachable_poses::Response &res )
 {
 	ROS_DEBUG_NAMED(ROS_NAME, "PoseExplorer::CB_calculateReachability");
 	transformToBaselink( req.target_points );

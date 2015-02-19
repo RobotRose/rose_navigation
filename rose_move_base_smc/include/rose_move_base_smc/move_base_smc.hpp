@@ -71,11 +71,11 @@ class MoveBaseSMC
 	
 	void CB_driveControllerFeedback(const rose_base_msgs::cmd_velocityFeedbackConstPtr& feedback);
 
-	void CB_relative_positioningSuccess(const actionlib::SimpleClientGoalState& state, const relative_positioning::relative_positioningResultConstPtr& client_result);
+	void CB_relative_positioningSuccess(const actionlib::SimpleClientGoalState& state, const rose_relative_positioning::relative_positioningResultConstPtr& client_result);
 
-	void CB_relative_positioningFail(const actionlib::SimpleClientGoalState& state, const relative_positioning::relative_positioningResultConstPtr& client_result);
+	void CB_relative_positioningFail(const actionlib::SimpleClientGoalState& state, const rose_relative_positioning::relative_positioningResultConstPtr& client_result);
 
-	void CB_relative_positioningFeedback(const relative_positioning::relative_positioningFeedbackConstPtr& feedback);
+	void CB_relative_positioningFeedback(const rose_relative_positioning::relative_positioningFeedbackConstPtr& feedback);
 
 	void CB_platform_alarm(const bool& new_value);
 	void CB_bumper_pressed(const bool& new_value);

@@ -37,9 +37,9 @@ RelativePositioning::~RelativePositioning()
 
 }
 
-void RelativePositioning::CB_relativePositioningGoalReceived(const relative_positioning::relative_positioningGoalConstPtr& goal, SMC* smc)
+void RelativePositioning::CB_relativePositioningGoalReceived(const rose_relative_positioning::relative_positioningGoalConstPtr& goal, SMC* smc)
 {
-    relative_positioning::relative_positioningResult server_result;
+    rose_relative_positioning::relative_positioningResult server_result;
 
     bool converged = calculateCommandVelocity(goal->reference_pose);
     
@@ -62,7 +62,7 @@ bool RelativePositioning::calculateCommandVelocity(const geometry_msgs::PoseStam
 {
     ros::Rate r(25);
 
-    relative_positioning::relative_positioningFeedback server_feedback;
+    rose_relative_positioning::relative_positioningFeedback server_feedback;
 
     geometry_msgs::PoseStamped cur_pose;
     geometry_msgs::PoseStamped target_pose = reference_pose;    
