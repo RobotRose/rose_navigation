@@ -1,0 +1,7 @@
+<library path="lib/librose_arc_local_planner">
+  <class name="rose_navigation/rose_arc_local_planner" type="rose_navigation::ArcLocalPlanner" base_class_type="nav_core::BaseLocalPlanner">
+  	<description>
+  		This is the rose arc local planner.
+  	</description>
+  </class>
+</library>
