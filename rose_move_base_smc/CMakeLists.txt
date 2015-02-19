@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
             nav_core
             rostest
             pluginlib
-            relative_positioning
+            rose_relative_positioning
             server_multiple_client
             shared_variables
 )
@@ -32,7 +32,7 @@ catkin_package(
     tf
     nav_core      
     move_base
-    relative_positioning
+    rose_relative_positioning
     shared_variables
   DEPENDS 
 )

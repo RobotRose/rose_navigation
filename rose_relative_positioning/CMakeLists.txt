@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
             rose_generic_platform
             rose_geometry
             rose_transformations
-            rostest
             server_multiple_client
             shared_variables
             std_msgs
@@ -51,7 +50,8 @@ generate_messages( DEPENDENCIES
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS 
+        include
   LIBRARIES
   CATKIN_DEPENDS  
         actionlib_msgs
@@ -64,7 +64,6 @@ catkin_package(
         rose_generic_platform
         rose_geometry
         rose_transformations
-        rostest
         server_multiple_client
         shared_variables
         std_msgs
