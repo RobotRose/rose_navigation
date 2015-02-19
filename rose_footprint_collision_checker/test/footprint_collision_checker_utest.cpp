@@ -13,7 +13,7 @@
 
 // Bring in my package's API, which is what I'm testing
 #include <geometry_msgs/PoseStamped.h>
-#include "footprint_collision_checker/footprint_collision_checker.hpp"
+#include "rose_footprint_collision_checker/footprint_collision_checker.hpp"
 // Bring in gtest
 #include <gtest/gtest.h>
 

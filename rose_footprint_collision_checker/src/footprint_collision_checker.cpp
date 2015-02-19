@@ -12,7 +12,7 @@
 * 
 ***********************************************************************************/
 
-#include "footprint_collision_checker/footprint_collision_checker.hpp"
+#include "rose_footprint_collision_checker/footprint_collision_checker.hpp"
 
 using namespace ClipperLib;
 
