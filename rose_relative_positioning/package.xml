@@ -22,7 +22,7 @@
   <build_depend>rose_geometry</build_depend>
   <build_depend>rose_transformations</build_depend>
   <build_depend>server_multiple_client</build_depend>
-  <build_depend>shared_variables</build_depend>
+  <build_depend>rose_shared_variables</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>tf</build_depend>
 
@@ -39,7 +39,7 @@
   <run_depend>rose_geometry</run_depend>
   <run_depend>rose_transformations</run_depend>
   <run_depend>server_multiple_client</run_depend>
-  <run_depend>shared_variables</run_depend>
+  <run_depend>rose_shared_variables</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
 
