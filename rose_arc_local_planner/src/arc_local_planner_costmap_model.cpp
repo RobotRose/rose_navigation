@@ -1,4 +1,4 @@
-#include "arc_local_planner/arc_local_planner_costmap_model.hpp"
+#include "rose_arc_local_planner/arc_local_planner_costmap_model.hpp"
 
 namespace rose_navigation {
 

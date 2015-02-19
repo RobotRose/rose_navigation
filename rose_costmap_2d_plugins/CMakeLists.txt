@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(costmap_2d_plugins)
+project(rose_costmap_2d_plugins)
 
 find_package(catkin REQUIRED
         COMPONENTS
@@ -24,7 +24,8 @@ include_directories(
 catkin_package( 
     INCLUDE_DIRS
         include
-    LIBRARIES costmap_2d_plugins
+    LIBRARIES 
+        rose_costmap_2d_plugins
     CATKIN_DEPENDS
         costmap_2d
         dynamic_reconfigure
@@ -41,16 +42,16 @@ catkin_package(
 
 set(CMAKE_CXX_FLAGS "-std=c++0x -g") # TODO OH: -g is DEBUG FLAG
 
-add_library(costmap_2d_plugins
+add_library(rose_costmap_2d_plugins
     src/simulation_obstacle_layer.cpp
 )
 
-target_link_libraries(costmap_2d_plugins
+target_link_libraries(rose_costmap_2d_plugins
     ${catkin_LIBRARIES}
-    )
+)
 
 
 install(TARGETS
-            costmap_2d_plugins
+            rose_costmap_2d_plugins
             LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-       )
+)

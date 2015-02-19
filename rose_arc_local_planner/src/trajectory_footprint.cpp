@@ -11,7 +11,7 @@
 * 
 ***********************************************************************************/
 
-#include "arc_local_planner/trajectory_footprint.hpp"
+#include "rose_arc_local_planner/trajectory_footprint.hpp"
 
 using std::vector;
 

@@ -18,7 +18,7 @@
 
 #include "rose_conversions/conversions.hpp"
 
-namespace costmap_2d_plugins
+namespace rose_costmap_2d_plugins
 {
 
 using costmap_2d::NO_INFORMATION;

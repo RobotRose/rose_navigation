@@ -1,11 +1,11 @@
 
-#include <costmap_2d_plugins/simulation_obstacle_layer.hpp>
+#include <rose_costmap_2d_plugins/simulation_obstacle_layer.hpp>
 
 #include <pluginlib/class_list_macros.h>
 
-PLUGINLIB_EXPORT_CLASS(costmap_2d_plugins::SimulationObstacleLayer, costmap_2d::Layer)
+PLUGINLIB_EXPORT_CLASS(rose_costmap_2d_plugins::SimulationObstacleLayer, costmap_2d::Layer)
 
-namespace costmap_2d_plugins
+namespace rose_costmap_2d_plugins
 {
 
 SimulationObstacleLayer::SimulationObstacleLayer()
@@ -205,4 +205,4 @@ void SimulationObstacleLayer::onFootprintChanged()
     footprint_layer_.onFootprintChanged();
 }
 
-} // end namespace costmap_2d
+} // end namespace rose_costmap_2d_plugins

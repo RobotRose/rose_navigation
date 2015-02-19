@@ -11,7 +11,7 @@
 * 
 ***********************************************************************************/
 
-#include "arc_local_planner/arc_footprint.hpp"
+#include "rose_arc_local_planner/arc_footprint.hpp"
 
 ArcFootprint::ArcFootprint(const Arc& arc, const vector<rose_geometry::Point>& footprint)
 	: TrajectoryFootprint()

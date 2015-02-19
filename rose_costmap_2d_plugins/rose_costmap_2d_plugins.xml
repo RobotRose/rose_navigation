@@ -1,5 +1,5 @@
 <class_libraries>
-  <library path="lib/libcostmap_2d_plugins">
+  <library path="lib/librose_costmap_2d_plugins">
     <class type="costmap_2d_plugins::SimulationObstacleLayer" base_class_type="costmap_2d::Layer">
       <description>Listens to the '/clicked_point' topic, and adds an obstacle to the map accordingly.</description>
     </class>  

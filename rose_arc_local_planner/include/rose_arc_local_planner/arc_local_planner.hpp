@@ -59,10 +59,10 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <costmap_2d/cost_values.h>
 
-#include "arc_local_planner/arc_local_planner_costmap_model.hpp"
-#include "arc_local_planner/arc.hpp"
-#include "arc_local_planner/arc_footprint.hpp"
-#include "arc_local_planner/trajectory_footprint.hpp"
+#include "rose_arc_local_planner/arc_local_planner_costmap_model.hpp"
+#include "rose_arc_local_planner/arc.hpp"
+#include "rose_arc_local_planner/arc_footprint.hpp"
+#include "rose_arc_local_planner/trajectory_footprint.hpp"
 
 #include "rose_common/common.hpp"
 #include "rose_conversions/conversions.hpp"

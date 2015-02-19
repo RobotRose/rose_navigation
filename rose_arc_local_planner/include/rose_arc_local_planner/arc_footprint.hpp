@@ -17,8 +17,8 @@
 #include "boost/foreach.hpp"
 #include "rose_common/common.hpp"
 #include "rose_geometry/point.hpp"
-#include "arc_local_planner/arc.hpp"
-#include "arc_local_planner/trajectory_footprint.hpp"
+#include "rose_arc_local_planner/arc.hpp"
+#include "rose_arc_local_planner/trajectory_footprint.hpp"
 
 class ArcFootprint : public TrajectoryFootprint
 {
