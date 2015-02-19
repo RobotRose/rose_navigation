@@ -39,7 +39,6 @@ add_library(rose_footprint_collision_checker SHARED
 )
 
 target_link_libraries(rose_footprint_collision_checker ${catkin_LIBRARIES} 
-    polyclipping
 )
 
 #############
