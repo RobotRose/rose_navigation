@@ -353,7 +353,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the direction of the path 30 points ahead
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 1.0);
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 20, 20, 1.0);
 			    	}
 
 			    	// 0 -> Failed
@@ -910,13 +910,14 @@ bool ArcLocalPlanner::trajectoryCollidesWithPoints( TrajectoryFootprint& traject
  * @param global_pose Current position of the robot, must be in the same frame as the plan	
  * @param plan The global plan	
  * @param n How many point ahead to take the orientation of the path
+ * @param range Number of points around th point n points ahead to take the average orientation from
  * @param max_distance The maximum distance the robot will be translated back from the selected point.
  * @return Target pose
  */
- //! @todo OH [IMPR]: Take the 'orientation' of the path by taking a number of points instead of just two points.
 Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose, 
 										const std::vector<PoseStamped>& plan,
 										const int& n,
+										const int& range,
 										const float& max_distance)
 {
 	Pose pose;
@@ -925,22 +926,34 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	int closest_index 		= getClosestWaypointIndex(global_pose, plan);
 
 	// Take two points. One n points ahead, one n + 1 points ahead
-	int target_index 		= std::min((int)plan.size() - 1, closest_index + n);
-	int target_index_plus	= std::min((int)plan.size() - 1, closest_index + n + 1);
+	//! @todo OH [IMPR]: Make this into a sperate function.
+	int half_range 			= ceil((float)range / 2.0);
+	int n_index 			= std::min((int)plan.size() - 1, closest_index + n);
+	int target_index_low 	= std::min((int)plan.size() - 1, closest_index + n - half_range );
+	int target_index_high 	= std::min((int)plan.size() - 1, closest_index + n + half_range );
 
 	// If this is the same point, we are at the end of the path, return the pose of the final point of the path
-	if(target_index == target_index_plus)
+	if(target_index_low == target_index_high)
 		pose = plan.back().pose;
 	else
 	{
-		drawPoint(plan.at(target_index).pose.position.x, plan.at(target_index).pose.position.y, 1, "map", 1.0, 1.0, 0.0);
-		drawPoint(plan.at(target_index_plus).pose.position.x, plan.at(target_index_plus).pose.position.y, 2, "map", 1.0, 1.0, 0.0);
-		
-		// Select the point on the path n points ahead
-		pose = plan.at(target_index).pose;
+		// Select the position as the point on the path n points ahead
+		pose = plan.at(n_index).pose;
 
-		// Determine direction of path by taking the angle between the point n points ahead and n + 1 points ahead
-		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, rose_geometry::getAngle(plan.at(target_index).pose, plan.at(target_index_plus).pose));
+		float average_orientation = 0.0;
+		for(int i = target_index_low; i < target_index_high - 1; i++)
+		{
+			// Indicate range used for averaging
+			drawPoint(plan.at(i).pose.position.x, plan.at(i).pose.position.y, 1, "map", 1.0, 1.0, 0.0);
+			
+			// Determine direction of path
+			average_orientation += rose_geometry::getAngle(plan.at(i).pose, plan.at(i + 1).pose);
+		}
+
+		// Average the oriention by dividing by the number of points
+		average_orientation /= target_index_high - target_index_low;
+
+		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, average_orientation);
 	}		
 	
 	// Translate the point a certain distance backward

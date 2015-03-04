@@ -153,6 +153,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     Pose    getAlignPose(           const Pose& global_pose, 
                                     const std::vector<PoseStamped>& plan,
                                     const int& n,
+                                    const int& range,
                                     const float& max_distance);
 
     Pose    getPathDirectionPose(   const Pose& global_pose, 
