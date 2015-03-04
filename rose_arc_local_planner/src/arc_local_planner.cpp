@@ -920,7 +920,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 										const int& range,
 										const float& max_distance)
 {
-	Pose pose;
+	Pose pose = global_pose;
 
 	// Determine the point at the path which is closest to the robot a.t.m.
 	int closest_index 		= getClosestWaypointIndex(global_pose, plan);
@@ -938,7 +938,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	else
 	{
 		// Select the position as the point on the path n points ahead
-		pose = plan.at(n_index).pose;
+		pose.position = plan.at(n_index).pose.position;
 
 		float average_orientation = 0.0;
 		for(int i = target_index_low; i < target_index_high - 1; i++)
@@ -971,7 +971,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	pose.position.x += vx;
 	pose.position.y += vy;
 
-	// Limit the distance such that we strafe to a non collission point
+	// Limit the distance such that we strafe to the selected position as far as we can from our current pose
 	limitMaximalStrafeDistance(pose);
 
 	// Display the computed align position
