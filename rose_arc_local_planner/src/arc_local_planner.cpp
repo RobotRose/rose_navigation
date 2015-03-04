@@ -353,7 +353,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the direction of the path 30 points ahead
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 20, 20, 1.0);
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 25, 1.0);
 			    	}
 
 			    	// 0 -> Failed
@@ -975,7 +975,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	limitMaximalStrafeDistance(pose);
 
 	// Display the computed align position
-	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 1.0, 0.0);
+	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 0.0, 1.0);
 
 	return pose;
 }
