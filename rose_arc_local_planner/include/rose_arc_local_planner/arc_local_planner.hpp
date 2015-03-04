@@ -150,13 +150,17 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     vector<rose_geometry::Point> createBoundingPolygon(   const rose_geometry::Point center,
                                                                     const vector<rose_geometry::Point> polygon,
                                                                     float margin);
+    Pose    getAlignPose(           const Pose& global_pose, 
+                                    const std::vector<PoseStamped>& plan,
+                                    const int& n,
+                                    const float& max_distance);
 
     Pose    getPathDirectionPose(   const Pose& global_pose, 
-                                    const vector<PoseStamped>& plan,
-                                    int n);
+                                    const std::vector<PoseStamped>& plan,
+                                    const int& n);
     Pose    getAimAtPathPose(       const Pose& global_pose, 
-                                    const vector<PoseStamped>& plan,
-                                    int n);
+                                    const std::vector<PoseStamped>& plan,
+                                    const int& n);
 
     VelCalcResult calculateDriveVelocityCommand(Twist& cmd_vel);
     VelCalcResult calculateRotateVelocityCommand(Twist& cmd_vel);

@@ -344,7 +344,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    	break;
 
 			    case ALIGN:
-			    	// Rotate to the direction of the path a number of points ahead
+			    	// Strafe to the point a bit 'back' of the direction of the path a number of points ahead
 			    	ROS_INFO_THROTTLE_NAMED(ALP_INFO_THROTTLE, ROS_NAME, "ALP in ALIGN state.");
 
 			    	if(prev_state_ != state_)
@@ -352,14 +352,14 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		// Store start strafe position
 			    		state_start_pose_ 	= global_pose_.pose;
 
-			    		// Get the direction of the path 20 points ahead
-			    		state_target_pose_ = getPathDirectionPose(global_pose_.pose, transformed_plan_, 30);
+			    		// Get the direction of the path 30 points ahead
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 1.0);
 			    	}
 
 			    	// 0 -> Failed
 			    	// 1 -> Busy
 			    	// 2 -> Finished
-			    	state_result = calculateRotateVelocityCommand(new_cmd_vel);
+			    	state_result = calculateStrafeVelocityCommand(new_cmd_vel);
 			    	if(state_result == FAILED)
 			    	{
 			    		// Failed, goto next action type
@@ -900,9 +900,76 @@ bool ArcLocalPlanner::trajectoryCollidesWithPoints( TrajectoryFootprint& traject
 	return collission;
 }
 
+/**
+ * @brief Get the position tostrafe to to give us a better change at moving trough a small opening.
+ * @details Select a point at the path n points ahead. Determine the orientation of the path at this point. 
+ * This is done by taking the point A, n points ahead, and point B, n + 1 points ahead, and calculating the angle between these points.
+ * Next the point which to strafe to will be determined by adding a vector of -length dist(current pose -> A) or max_distance.
+ * The pose will 
+ * 
+ * @param global_pose Current position of the robot, must be in the same frame as the plan	
+ * @param plan The global plan	
+ * @param n How many point ahead to take the orientation of the path
+ * @param max_distance The maximum distance the robot will be translated back from the selected point.
+ * @return Target pose
+ */
+ //! @todo OH [IMPR]: Take the 'orientation' of the path by taking a number of points instead of just two points.
+Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose, 
+										const std::vector<PoseStamped>& plan,
+										const int& n,
+										const float& max_distance)
+{
+	Pose pose;
+
+	// Determine the point at the path which is closest to the robot a.t.m.
+	int closest_index 		= getClosestWaypointIndex(global_pose, plan);
+
+	// Take two points. One n points ahead, one n + 1 points ahead
+	int target_index 		= std::min((int)plan.size() - 1, closest_index + n);
+	int target_index_plus	= std::min((int)plan.size() - 1, closest_index + n + 1);
+
+	// If this is the same point, we are at the end of the path, return the pose of the final point of the path
+	if(target_index == target_index_plus)
+		pose = plan.back().pose;
+	else
+	{
+		drawPoint(plan.at(target_index).pose.position.x, plan.at(target_index).pose.position.y, 1, "map", 0.0, 0.0, 1.0);
+		drawPoint(plan.at(target_index_plus).pose.position.x, plan.at(target_index_plus).pose.position.y, 2, "map", 0.0, 0.0, 1.0);
+		
+		// Select the point on the path n points ahead
+		pose = plan.at(target_index).pose;
+
+		// Determine direction of path by taking the angle between the point n points ahead and n + 1 points ahead
+		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, rose_geometry::getAngle(plan.at(target_index).pose, plan.at(target_index_plus).pose));
+	}		
+	
+	// Translate the point a certain distance backward
+	// First create a vector at the origin
+	float vx = 1.0;
+	float vy = 0.0;
+
+	// Rotate the vector to align with the selected point on the path
+	rose_geometry::rotateVect(&vx, &vy, tf::getYaw(pose.orientation));
+
+	// Set the length negative to move it backward a certain amount
+	rose_geometry::setVectorLengthXY(&vx, &vy, std::fmax(rose_geometry::distanceXY(global_pose.position, pose.position), max_distance));
+
+	// Add the vector to the selected path point
+	pose.position.x += vx;
+	pose.position.y += vy;
+
+	// Limit the distance such that we strafe to a non collission point
+	limitMaximalStrafeDistance(pose);
+
+	// Display the computed align position
+	drawPoint(pose.position.x, pose.position.y, 3, "map", 0.0, 1.0, 0.0);
+
+	return pose;
+}
+
 Pose ArcLocalPlanner::getPathDirectionPose(		const Pose& global_pose, 
-												const vector<PoseStamped>& plan,
-												int n)
+												const std::vector<PoseStamped>& plan,
+												const int& n)
 {
 	Pose pose = global_pose;
 
@@ -923,9 +990,9 @@ Pose ArcLocalPlanner::getPathDirectionPose(		const Pose& global_pose,
 	return pose;
 }
 
-Pose ArcLocalPlanner::getAimAtPathPose(	const Pose& global_pose, 
-												const vector<PoseStamped>& plan,
-												int n)
+Pose ArcLocalPlanner::getAimAtPathPose(			const Pose& global_pose, 
+												const std::vector<PoseStamped>& plan,
+												const int& n)
 {
 	Pose pose;
 
