@@ -944,7 +944,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 		for(int i = target_index_low; i < target_index_high - 1; i++)
 		{
 			// Indicate range used for averaging
-			drawPoint(plan.at(i).pose.position.x, plan.at(i).pose.position.y, 1, "map", 1.0, 1.0, 0.0);
+			drawPoint(plan.at(i).pose.position.x, plan.at(i).pose.position.y, i, "map", 1.0, 1.0, 0.0);
 			
 			// Determine direction of path
 			average_orientation += rose_geometry::getAngle(plan.at(i).pose, plan.at(i + 1).pose);
@@ -975,7 +975,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	limitMaximalStrafeDistance(pose);
 
 	// Display the computed align position
-	drawPoint(pose.position.x, pose.position.y, 3, "map", 0.0, 1.0, 0.0);
+	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 1.0, 0.0);
 
 	return pose;
 }
