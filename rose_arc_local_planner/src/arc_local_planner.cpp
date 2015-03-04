@@ -20,7 +20,7 @@ namespace rose_navigation{
 #define ROTATE_ANGLE_THRESHOLD 	0.04
 #define STRAFE_SAFETY_DIST		0.05
 #define DISTANCE_MAX_VEL 		1.2
-#define MIN_ARC_DIST			0.05	
+#define MIN_ARC_DIST			0.15	
 #define MAX_ANGLE_MEASURE 		M_PI*(4.0/4.0)
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
@@ -353,7 +353,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the direction of the path 30 points ahead
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 25, 1.0);
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 40, 1.5);
 			    	}
 
 			    	// 0 -> Failed
