@@ -933,8 +933,8 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 		pose = plan.back().pose;
 	else
 	{
-		drawPoint(plan.at(target_index).pose.position.x, plan.at(target_index).pose.position.y, 1, "map", 0.0, 0.0, 1.0);
-		drawPoint(plan.at(target_index_plus).pose.position.x, plan.at(target_index_plus).pose.position.y, 2, "map", 0.0, 0.0, 1.0);
+		drawPoint(plan.at(target_index).pose.position.x, plan.at(target_index).pose.position.y, 1, "map", 1.0, 1.0, 0.0);
+		drawPoint(plan.at(target_index_plus).pose.position.x, plan.at(target_index_plus).pose.position.y, 2, "map", 1.0, 1.0, 0.0);
 		
 		// Select the point on the path n points ahead
 		pose = plan.at(target_index).pose;
