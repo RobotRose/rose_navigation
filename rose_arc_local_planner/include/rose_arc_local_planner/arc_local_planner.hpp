@@ -167,7 +167,8 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     VelCalcResult calculateRotateVelocityCommand(Twist& cmd_vel);
     VelCalcResult calculateStrafeVelocityCommand(Twist& cmd_vel);
     float   currentRadius();
-    Arc     findArc(const Pose& start_pose, const rose_geometry::Point& check_waypoint);
+    Arc     createArcFromPoseAndTarget(const Pose& start_pose, const rose_geometry::Point& check_waypoint);
+    Arc     createArcFromVelocity(const Pose& start_pose, const Twist& vel, const float& percentage_of_circle);
     
     vector<Position2DInt>                       getLethalCellsInPolygon(const vector<rose_geometry::Point>& polygon);
     vector<rose_geometry::Point>      getCellsPoints( const vector<Position2DInt>& cells, 

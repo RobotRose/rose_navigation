@@ -582,53 +582,68 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 	// Loop to create all arcs
 	int index_range = end_index - start_index;
 	float lowest_cost = 1.0/(1.0/index_range);
-	for(index = start_index; index < end_index-(index_step-1); index += index_step)
+
+	int num_tang_velocities 		= 5;
+	int num_rot_velocities 			= 10;
+	int num_percentages 			= 5;
+
+	float stepsize_tang_velocities  = 0.1;
+	float stepsize_rot_velocities  	= 0.1;
+	float stepsize_percentages  	= 4;
+
+	for(int i = 0; i < num_tang_velocities; i++)
 	{
-		if(rose_geometry::distanceXY(global_pose_.pose, plan.at(index).pose) < MIN_ARC_DIST)
+		float tangential_velocity = -( ((float)num_tang_velocities)/2.0 *stepsize_tang_velocities ) + i*stepsize_tang_velocities;
+		
+		if(fabs(tangential_velocity) == MIN_VEL_ABS)
+				continue;
+
+		for(int j = 0; j < num_rot_velocities; j++)
 		{
-			dist_fails++;
-			continue;				
+			float rotational_velocity = -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + j*stepsize_rot_velocities;
+
+			if(fabs(rotational_velocity) < MIN_VEL_THETA)
+				continue;
+
+			for(int k = 1; k < num_percentages; k++)
+			{
+				float percentage = k*stepsize_percentages;
+
+				Twist velocity;
+				velocity.linear.x 	= tangential_velocity;
+				velocity.angular.z 	= rotational_velocity;
+			
+				Arc arc = createArcFromVelocity(global_pose_.pose, velocity, percentage);
+				// float color = (float)(i*j*k)/(float)(num_tang_velocities*num_rot_velocities*num_percentages);
+				// drawPoint(arc.getCenter().x, arc.getCenter().y, i*j*k, "map", 0.5, color, 0.0);
+				// arc.setExtraStartDistance(0.0);
+		    	arc.setExtraStopDistance(0.15);
+
+				unsigned int index = getClosestWaypointIndex(arc.getStopPose(), global_plan_);
+				
+				float distance_crow    = rose_geometry::distanceXY(arc.getStartPose(), arc.getStopPose());
+				float distance_to_path = rose_geometry::distanceXY(arc.getStopPose(), global_plan_.at(index).pose);
+		    	if( distance_to_path > 0.1 or distance_crow < 0.1)
+		    		continue;
+
+
+
+				ArcFootprint arc_footprint(arc, footprint_);
+
+				// Set path distance
+				arc_footprint.setGlobalPathDistance( index );
+
+				for(const auto& point : arc_footprint.getPolygonRef())
+				{
+					min_x = fmin(min_x, point.x);
+					min_y = fmin(min_y, point.y);
+					max_x = fmax(max_x, point.x);
+					max_y = fmax(max_y, point.y);
+				}
+
+				arc_footprints.push_back(arc_footprint);
+			}
 		}
-
-
-		Arc arc = findArc(global_pose_.pose, plan.at(index).pose.position);
-
-		arc.setExtraStartDistance(0.0);
-    	arc.setExtraStopDistance(0.15);
-
-		if(arc.getAngleMeasureExtra() > MAX_ANGLE_MEASURE)
-		{
-			angle_measure_fails++;
-			continue;
-		}
-
-		float arrival_angle_difference  = MAX_ARRIVAL_ANGLE;
-		if(index + 1 < plan.size())
-			arrival_angle_difference	= fabs(rose_geometry::getShortestSignedAngle(arc.getStopTangentAngle(), rose_geometry::getAngle(plan.at(index).pose.position, plan.at(index + 1).pose.position)));
-		else
-			arrival_angle_difference 	= 0.0;
-
-		if( arrival_angle_difference >= MAX_ARRIVAL_ANGLE)
-		{
-			arrival_angle_fails++;
-			continue;
-		}
-
-		ArcFootprint arc_footprint(arc, footprint_);
-
-		// Set normalized path distance
-		arc_footprint.setGlobalPathDistance(((float)index - (float)start_index + 1)/(float)index_range);
-		arc_footprint.global_path_index_ = index;
-
-		for(const auto& point : arc_footprint.getPolygonRef())
-		{
-			min_x = fmin(min_x, point.x);
-			min_y = fmin(min_y, point.y);
-			max_x = fmax(max_x, point.x);
-			max_y = fmax(max_y, point.y);
-		}
-
-		arc_footprints.push_back(arc_footprint);
 	}
 
 	ROS_DEBUG_NAMED(ROS_NAME, "Found %d valid arc's out of %d. Fails: dist %d | angle_measure %d | arrival_angle %d | radius_diff %d", 	(int)arc_footprints.size(),
@@ -653,6 +668,8 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 	lbs_point.y = min_y - 0.1;
 	largest_bounding_square.push_back(lbs_point);
 
+	float min_dist 						= 1e6;
+	float max_dist 						= -1e6;
 	float min_cost 						= 1e6;
 	float max_cost 						= -1e6;
 	float min_radius_diff				= 1e6;
@@ -671,13 +688,19 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 			if(arc_footprint.getCost() > max_cost)
 				max_cost = arc_footprint.getCost();
 
+			if(arc_footprint.getGlobalPathDistance() < min_dist)
+				min_dist = arc_footprint.getGlobalPathDistance();
+
+			if(arc_footprint.getGlobalPathDistance() > max_dist)
+				max_dist = arc_footprint.getGlobalPathDistance();
+
 			// Determine minimal and maximal arc difference
 			float radius_difference = fabs(current_radius - arc_footprint.getArcRef().getSignedRadius()); 
 			min_radius_diff 		= fmin(min_radius_diff, radius_difference);
 			max_radius_diff 		= fmax(max_radius_diff, radius_difference);
 
 			valid_arc_footprints.push_back(arc_footprint);
-			
+
 			// Visualize all tried arcs
 			PoseStamped arc_point;
 			
@@ -694,12 +717,16 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 			collission_fails++;
 	}
 
-	ROS_DEBUG_NAMED(ROS_NAME, "Found %d valid arc(s), %d colliding footprint arc's.", (int)valid_arc_footprints.size(), collission_fails);
+	ROS_INFO_NAMED(ROS_NAME, "Found %d valid arc(s), %d colliding footprint arc's.", (int)valid_arc_footprints.size(), collission_fails);
 
 	ArcFootprint* best_arc_trajectory 	= NULL;
 	float best_ranking 					= -1e6;
 	for(const auto& arc_footprint : valid_arc_footprints)
 	{
+		float normalized_dist_score = 0.0;
+		if(max_dist - min_dist != 0.0)
+			normalized_dist_score = (arc_footprint.getGlobalPathDistance() - min_dist)/(max_dist - min_dist);
+
 		float normalized_cost = 1.0;
 		if(max_cost - min_cost != 0.0 and arc_footprint.getCost() - min_cost != 0.0)
 			normalized_cost 	= (arc_footprint.getCost() - min_cost)/(max_cost - min_cost);
@@ -710,18 +737,22 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 		if(max_radius_diff - min_radius_diff != 0.0)
 			normalized_arc_radius_diff 	= fabs(current_radius_difference - min_radius_diff)/fabs(max_radius_diff - min_radius_diff);
 
-		float ranking = ( (distance_weight_*arc_footprint.getGlobalPathDistance() ) * (clearance_weight_*normalized_cost));
+		float ranking = ( (distance_weight_*normalized_dist_score) * (clearance_weight_*normalized_cost));
 
-		ranking *= difference_weight_*normalized_arc_radius_diff;
+		ranking += difference_weight_*normalized_arc_radius_diff;
 	
-		ROS_DEBUG_NAMED(ROS_NAME, "Normalized global path distance        = %.6f", distance_weight_*arc_footprint.getGlobalPathDistance());
+		ROS_DEBUG_NAMED(ROS_NAME, "Normalized distance score       		  = %.6f", distance_weight_*normalized_dist_score);
 		ROS_DEBUG_NAMED(ROS_NAME, "Squared distance to obstacles cost     = %.6f", clearance_weight_*normalized_cost);
 		ROS_DEBUG_NAMED(ROS_NAME, "normalized_arc_radius_diff %2.2f/%2.2f = %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
 		ROS_DEBUG_NAMED(ROS_NAME, "Resulting ranking                      = %.6f", ranking);
 		
 		if(ranking >= best_ranking)
 		{
-			ROS_DEBUG_NAMED(ROS_NAME, " New best ranking                      = %.6f", ranking);
+			ROS_DEBUG_NAMED(ROS_NAME, " New best ranking                        = %.6f", ranking);
+			ROS_DEBUG_NAMED(ROS_NAME, "  Normalized distance score       	   = %.6f", distance_weight_*normalized_dist_score);
+			ROS_DEBUG_NAMED(ROS_NAME, "  Squared distance to obstacles cost     = %.6f", clearance_weight_*normalized_cost);
+			ROS_DEBUG_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f = %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
+			ROS_DEBUG_NAMED(ROS_NAME, "  Resulting ranking      				   = %.6f", ranking);
 			best_ranking 			= ranking;
 			best_arc_trajectory 	= new ArcFootprint(arc_footprint);
 			prev_ranking_ 			= ranking;
@@ -937,14 +968,18 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	int target_index_high 	= std::min((int)plan.size() - 1, closest_index + n + half_range );
 
 	// If this is the same point, we are at the end of the path, return the pose of the final point of the path
+	float average_orientation;
 	if(target_index_low == target_index_high)
-		pose = plan.back().pose;
+	{
+		pose 				= plan.back().pose;
+		average_orientation = tf::getYaw(pose.orientation);
+	}
 	else
 	{
 		// Select the position as the point on the path n points ahead
 		pose.position = plan.at(n_index).pose.position;
 
-		float average_orientation = 0.0;
+		average_orientation = 0.0;
 		for(int i = target_index_low; i < target_index_high - 1; i++)
 		{
 			// Indicate range used for averaging
@@ -1239,16 +1274,31 @@ VelCalcResult ArcLocalPlanner::calculateStrafeVelocityCommand(Twist& cmd_vel)
 
 float ArcLocalPlanner::currentRadius()
 {
-	float r = 0.0;
+	float r;
 	if(local_vel_.angular.z != 0.0)
 		r = sqrt(local_vel_.linear.x*local_vel_.linear.x + local_vel_.linear.y*local_vel_.linear.y)/local_vel_.angular.z;
+	else
+		r = 10000000.0; 	// Very large (as good as inf)
 
 	ROS_DEBUG_NAMED(ROS_NAME, "x, y, yaw | %.3f, %.3f, %.3f | r: %.4f | ", local_vel_.linear.x, local_vel_.linear.y, local_vel_.angular.z, r);
 }
 
-Arc ArcLocalPlanner::findArc(const Pose& start_pose, const rose_geometry::Point& check_point)
+Arc ArcLocalPlanner::createArcFromPoseAndTarget(const Pose& start_pose, const rose_geometry::Point& check_point)
 {
 	return Arc(start_pose.position, tf::getYaw(start_pose.orientation), check_point);
+}
+
+Arc ArcLocalPlanner::createArcFromVelocity(const Pose& start_pose, const Twist& vel, const float& percentage_of_circle)
+{
+	float r;
+	if(vel.angular.z != 0.0)
+		r = sqrt(vel.linear.x*vel.linear.x)/vel.angular.z;
+	else
+		r = 1000.0; 	// Very large (as good as inf)
+
+	// ROS_INFO_NAMED(ROS_NAME, "Createing arc from cmdvel [ %.4f, %.4f ] with radius %.2f and percentage_of_circle %.2f;", vel.linear.x, vel.angular.z, r, percentage_of_circle);
+
+	return Arc(start_pose.position, tf::getYaw(start_pose.orientation), r, percentage_of_circle);
 }
 
 // Direction positive is CCW negative is CW
