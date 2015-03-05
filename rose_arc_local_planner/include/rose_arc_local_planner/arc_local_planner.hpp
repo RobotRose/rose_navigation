@@ -140,7 +140,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
                                 float distance_limit);
     
     float   findMaxPossibleRotation(const Pose& pose, const vector<rose_geometry::Point>& footprint, int direction);
-    void    limitMaximalStrafeDistance( Pose& pose);
+    void    limitMaximalStrafeDistance(Pose& pose);
     float   findMaximalStrafeDistance(  const Pose& pose,
                                         const vector<rose_geometry::Point>& footprint,
                                         const rose_geometry::Point& direction,

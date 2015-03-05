@@ -353,7 +353,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the direction of the path 30 points ahead
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 40, 1.5);
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 40, 0.5);
 			    	}
 
 			    	// 0 -> Failed
@@ -1327,7 +1327,7 @@ float ArcLocalPlanner::findMaxPossibleRotation(	const Pose& pose,
 
 
 rose_geometry::Point ArcLocalPlanner::findFootprintSteepestDescent(	const Pose& global_pose, 
-																				const std::vector<Position2DInt>& footprint_cells)
+																	const std::vector<Position2DInt>& footprint_cells)
 {
 	int dx = 0;
 	int dy = 0;
