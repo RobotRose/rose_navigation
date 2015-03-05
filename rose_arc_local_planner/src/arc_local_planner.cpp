@@ -358,6 +358,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
 			    											);
 			    	}
+			    	limitMaximalStrafeDistance(state_target_pose_);
 
 			    	// 0 -> Failed
 			    	// 1 -> Busy
@@ -397,8 +398,8 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		// Store start strafe position
 			    		state_start_pose_ 	= global_pose_.pose;
 			    		state_target_pose_	= transformed_plan_.at(getClosestWaypointIndex(global_pose_.pose, transformed_plan_, 50)).pose; //! @todo magic number
-			    		limitMaximalStrafeDistance(state_target_pose_);
 		    		}
+			    	limitMaximalStrafeDistance(state_target_pose_);
 
 			    	state_result = calculateStrafeVelocityCommand(new_cmd_vel);
 
@@ -433,8 +434,8 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    	{
 		    			state_start_pose_ 	= global_pose_.pose;
 			    		state_target_pose_	= findStrafeTarget(transformed_footprint_, 0.25);		//! @todo magic number
-			    		limitMaximalStrafeDistance(state_target_pose_);
 			    	}
+			    	limitMaximalStrafeDistance(state_target_pose_);
 
 			    	// 0 -> Failed
 			    	// 1 -> Busy
@@ -973,13 +974,9 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	// Add the vector to the selected path point
 	pose.position.x += vx;
 	pose.position.y += vy;
-	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 1.0, 1.0);
-
-	// Limit the distance such that we strafe to the selected position as far as we can from our current pose
-	limitMaximalStrafeDistance(pose);
 
 	// Display the computed align position
-	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 0.0, 1.0);
+	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 1.0, 0.0, 1.0);
 
 	return pose;
 }
