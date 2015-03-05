@@ -353,7 +353,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		// Store start strafe position
 			    		state_start_pose_ 	= global_pose_.pose;
 
-			    		// Get the direction of the path 30 points ahead
+			    		// Get the align pose
 			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 40, 40, 
 			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
 			    											);
@@ -965,10 +965,10 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	float vy = 0.0;
 
 	// Rotate the vector to align with the selected point on the path
-	rose_geometry::rotateVect(&vx, &vy, tf::getYaw(pose.orientation));
+	rose_geometry::rotateVect(&vx, &vy, average_orientation);
 
 	// Set the length negative to move it backward a certain amount
-	rose_geometry::setVectorLengthXY(&vx, &vy, std::fmax(rose_geometry::distanceXY(global_pose.position, pose.position), max_distance));
+	rose_geometry::setVectorLengthXY(&vx, &vy, std::fmin(rose_geometry::distanceXY(global_pose.position, pose.position), max_distance));
 
 	// Add the vector to the selected path point
 	pose.position.x += vx;
