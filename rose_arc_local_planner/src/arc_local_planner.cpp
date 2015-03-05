@@ -218,8 +218,9 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 
    	if(transformed_plan_.size() >= 1)
    	{
-	    rose_geometry::Point robot_pos  		= global_pose_.pose.position;
-	    rose_geometry::Point first_path_point 	= transformed_plan_.front().pose.position;
+	    rose_geometry::Point robot_pos	= global_pose_.pose.position;
+	    Pose first_path_pose			= transformed_plan_.front().pose;
+	    Pose final_path_pose			= transformed_plan_.back().pose;
 
 	    // Get current footprint cells
 	    Eigen::Vector3f cur_pos(robot_pos.x, robot_pos.y, tf::getYaw(global_pose_.pose.orientation));
@@ -353,7 +354,9 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the direction of the path 30 points ahead
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 40, 0.5);
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 40, 
+			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
+			    											);
 			    	}
 
 			    	// 0 -> Failed
