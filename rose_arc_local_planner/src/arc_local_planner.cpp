@@ -973,6 +973,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	// Add the vector to the selected path point
 	pose.position.x += vx;
 	pose.position.y += vy;
+	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 1.0, 1.0);
 
 	// Limit the distance such that we strafe to the selected position as far as we can from our current pose
 	limitMaximalStrafeDistance(pose);
