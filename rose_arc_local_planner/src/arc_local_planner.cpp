@@ -310,7 +310,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Aim at the path 20 points ahead
-			    		state_target_pose_ = getAimAtPathPose(global_pose_.pose, transformed_plan_, 50);
+			    		state_target_pose_ = getAimAtPathPose(global_pose_.pose, transformed_plan_, 40);
 			    		
 			    		// Get the direction of the path 20 points ahead
 			    		//state_target_pose_ = getPathDirectionPose(global_pose_.pose, transformed_plan_, 20);
@@ -354,7 +354,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the direction of the path 30 points ahead
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 30, 40, 
+			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 40, 40, 
 			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
 			    											);
 			    	}
@@ -1408,7 +1408,7 @@ float ArcLocalPlanner::findMaximalStrafeDistance(	const Pose& start_pose,
 	// Check direction parameter
 	if(rose_geometry::getVectorLengthXY(direction.x, direction.y) == 0.0)
 	{
-		ROS_ERROR_NAMED(ROS_NAME, "ArcLocalPlanner::findMaximalStrafeDistance direction vector parameter should not have length zero.");
+		ROS_WARN_NAMED(ROS_NAME, "ArcLocalPlanner::findMaximalStrafeDistance direction vector parameter should not have length zero.");
 		return 0.0;
 	}
 
