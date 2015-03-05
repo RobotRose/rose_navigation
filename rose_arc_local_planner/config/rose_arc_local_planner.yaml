@@ -8,5 +8,6 @@ cost_function_weights:
 
     # Clearance towards obstacles score
     clearance: 0.75
+
     # Arc difference cost
-    difference: -2.0
+    difference: -0.1
