@@ -14,11 +14,12 @@ find_package(catkin REQUIRED COMPONENTS
             roscpp
             rose_common
             rose_conversions
+            rose_footprint_collision_checker
             rose_geometry
+            rose_shared_variables
             rose_twist_moving_average_filter
             rostest
             server_multiple_client
-            rose_shared_variables
             std_msgs
             tf
             visualization_msgs
@@ -32,7 +33,7 @@ catkin_package(
         include
     LIBRARIES 
         rose_arc_local_planner
-    CATKIN_DEPENDS  
+    CATKIN_DEPENDS
         angles
         base_local_planner
         costmap_2d
@@ -45,11 +46,12 @@ catkin_package(
         roscpp
         rose_common
         rose_conversions
+        rose_footprint_collision_checker  
         rose_geometry
+        rose_shared_variables
         rose_twist_moving_average_filter
         rostest
         server_multiple_client
-        rose_shared_variables
         std_msgs
         tf
         visualization_msgs

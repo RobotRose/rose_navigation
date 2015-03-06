@@ -55,19 +55,28 @@ typedef std::vector<Vertex>                     Polygon;
 typedef std::vector<Polygon>                    Polygons;
 typedef std::vector<geometry_msgs::PoseStamped> Trajectory;
 
+struct Timing
+{
+    std::vector<ros::Time> start_times;
+    std::vector<ros::Time> finish_times;
+};
+
 class FootprintCollisionChecker
 {
   public:
-    FootprintCollisionChecker(ros::NodeHandle& n);
+    FootprintCollisionChecker();
     ~FootprintCollisionChecker();
+
+    void    processTiming(const std::string& name, Timing& time_struct, const int& average_over, const float& rate);
 
     bool    setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint);
     bool    addPoints(const StampedVertices& new_lethal_points);
     bool    clearPoints();
     StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);
-    void    check(const geometry_msgs::Twist& vel, float& euclidean_distance, float& rotation , bool& reached_max_sim_time);
+    bool    checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t);
+    bool    checkTrajectory(const Trajectory& trajectory);
     bool    collision(const Polygon& polygon, const StampedVertices& lethal_points);
-    Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt);
+    Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt, const float& forward_t, const float& max_distance);
     Polygon getPolygonAtPose( const geometry_msgs::PoseStamped& stamped_pose, 
                                 const std::vector<rose_geometry::Point>& footprint);
     bool    setMaxDistance(float max_distance);
@@ -105,6 +114,11 @@ class FootprintCollisionChecker
     std::map<std::string, ros::Publisher> footprint_pubs_;
 
     std::mutex                  points_mutex_;
+
+
+    Timing timing_add_points_;
+    Timing timing_sweep_;
+    Timing timing_collission_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 

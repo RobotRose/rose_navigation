@@ -81,6 +81,12 @@ void ArcLocalPlanner::initialize(string name, tf::TransformListener* tf, costmap
         vector<geometry_msgs::Point> footprint_ros = costmap_ros_->getRobotFootprint();
 	    footprint_ 			= vector<rose_geometry::Point>(footprint_ros.begin(), footprint_ros.end());
 
+	    geometry_msgs::PoseStamped frame_of_motion; 
+	    frame_of_motion.header.frame_id = "base_link";
+	    frame_of_motion.pose.orientation.w = 1.0;
+
+	    FCC_.setFootprint(frame_of_motion, footprint_);
+
 	    // Get a nodehandle 
 	    pn_ = ros::NodeHandle("~");
 
@@ -545,128 +551,151 @@ void ArcLocalPlanner::publishPolygon(vector<rose_geometry::Point> transformed_fo
 	footprint_pubs_.at(name).publish( footprint_polygon );
 }
 
-bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& best_arc)
+bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, Twist& best_cmd_vel)
 {
-	int index_step = 1;
+	// To be safe
+	Twist all_zero;
+	best_cmd_vel = all_zero;
 
-	// Set search area, limit n to the end of the plan
-	int closest_index = (int)getClosestWaypointIndex(global_pose_.pose, global_plan_);
-	
-	prev_index_ 	= min(prev_index_, closest_index);
-
-	int half_n      = (int)ceil(n/2.0);
-	int start_index = max(0, max(prev_index_ - half_n, closest_index) );
-	int end_index 	= min( min( (start_index + n)*index_step, closest_index + n), (int)plan.size() );
-	
-
-	ROS_DEBUG_NAMED(ROS_NAME, "start_index: %d -> end_index: %d", start_index , end_index);
-
-	float 	current_radius  = currentRadius();
-	int 	index 			= 0;
-
-	vector<PoseStamped> 	simulation_plan;
-
-	vector<ArcFootprint> 	arc_footprints;
-	vector<ArcFootprint> 	valid_arc_footprints;
+	Trajectory 						simulation_plan;
+	Trajectory 						extrema_trajectory;
+	std::vector<TrajectoryScore> 	trajectories;
+	std::vector<TrajectoryScore> 	valid_trajectories;
 	float min_x = 1e6;
 	float min_y = 1e6;
 	float max_x = -1e6;
 	float max_y = -1e6;
 
-	int dist_fails 				= 0;
-	int angle_measure_fails 	= 0;
-	int arrival_angle_fails 	= 0;
-	int radius_diff_fails 		= 0;
-	int collission_fails 		= 0;
-	
-	// Loop to create all arcs
-	int index_range = end_index - start_index;
-	float lowest_cost = 1.0/(1.0/index_range);
+	int distance_fails  	= 0;
+	int collission_fails 	= 0;
 
-	int num_tang_velocities 		= 5;
-	int num_rot_velocities 			= 10;
-	int num_percentages 			= 5;
+	float 	current_radius  = currentRadius();
 
-	float stepsize_tang_velocities  = 0.1;
+	int num_tang_velocities 		= 6;
+	int num_rot_velocities 			= 8;
+	int num_dts 					= 3;
+
+	float stepsize_tang_velocities  = 0.025;
 	float stepsize_rot_velocities  	= 0.1;
-	float stepsize_percentages  	= 4;
-
-	for(int i = 0; i < num_tang_velocities; i++)
+	float stepsize_dts  			= 0.1;
+	for(int i = 1; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = -( ((float)num_tang_velocities)/2.0 *stepsize_tang_velocities ) + i*stepsize_tang_velocities;
+		float tangential_velocity = MIN_VEL_ABS + i*stepsize_tang_velocities;
 		
-		if(fabs(tangential_velocity) == MIN_VEL_ABS)
-				continue;
-
 		for(int j = 0; j < num_rot_velocities; j++)
 		{
 			float rotational_velocity = -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + j*stepsize_rot_velocities;
 
-			if(fabs(rotational_velocity) < MIN_VEL_THETA)
-				continue;
+			// if(fabs(rotational_velocity) < MIN_VEL_THETA)
+			// 	continue;
 
-			for(int k = 1; k < num_percentages; k++)
+			for(int k = 1; k < num_dts; k++)
 			{
-				float percentage = k*stepsize_percentages;
+				float forward_t = k*stepsize_dts;
 
 				Twist velocity;
 				velocity.linear.x 	= tangential_velocity;
 				velocity.angular.z 	= rotational_velocity;
-			
-				Arc arc = createArcFromVelocity(global_pose_.pose, velocity, percentage);
-				// float color = (float)(i*j*k)/(float)(num_tang_velocities*num_rot_velocities*num_percentages);
-				// drawPoint(arc.getCenter().x, arc.getCenter().y, i*j*k, "map", 0.5, color, 0.0);
-				// arc.setExtraStartDistance(0.0);
-		    	arc.setExtraStopDistance(0.15);
 
-				unsigned int index = getClosestWaypointIndex(arc.getStopPose(), global_plan_);
-				
-				float distance_crow    = rose_geometry::distanceXY(arc.getStartPose(), arc.getStopPose());
-				float distance_to_path = rose_geometry::distanceXY(arc.getStopPose(), global_plan_.at(index).pose);
-		    	if( distance_to_path > 0.1 or distance_crow < 0.1)
-		    		continue;
+				TrajectoryScore trajectory_score;
+				trajectory_score.velocity 	= velocity;
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0, 2.0);
 
-
-
-				ArcFootprint arc_footprint(arc, footprint_);
+				//Arc arc = createArcFromVelocity(global_pose_.pose, velocity, t);
+				float color = (float)(i*j*k)/(float)(num_tang_velocities*num_rot_velocities*stepsize_dts);
+				drawPoint(trajectory_score.trajectory.back().pose.position.x, trajectory_score.trajectory.back().pose.position.y, i*j*k, "map", 0.5, color, 0.0);
 
 				// Set path distance
-				arc_footprint.setGlobalPathDistance( index );
+				//! @todo OH [ERROR]: trajectory is NOT IN MAP FRAME!!!! Does not work
+				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back().pose, transformed_plan_);
+				
+				// float distance_crow    = rose_geometry::distanceXY(trajectory_score.trajectory.front().pose, trajectory_score.trajectory.back().pose);
+				float distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, transformed_plan_.at(path_index).pose);
+		    	if( path_index == 0)//rose_geometry::distanceXY(global_pose_.pose, transformed_plan_.at(path_index).pose) <= distance_to_path)
+		    	{
+		    		distance_fails++;
+		    		continue;
+		    	}
+				trajectory_score.score 	= path_index;
+				trajectory_score.cost 	= 1.0/distance_to_path;
 
-				for(const auto& point : arc_footprint.getPolygonRef())
+				for(const auto& stamped_pose : trajectory_score.trajectory)
 				{
-					min_x = fmin(min_x, point.x);
-					min_y = fmin(min_y, point.y);
-					max_x = fmax(max_x, point.x);
-					max_y = fmax(max_y, point.y);
-				}
+					if(stamped_pose.pose.position.x <= min_x)
+					{
+						min_x = stamped_pose.pose.position.x;
+						extrema_trajectory = trajectory_score.trajectory;
+					}
 
-				arc_footprints.push_back(arc_footprint);
+					if(stamped_pose.pose.position.y <= min_y)
+					{
+						min_y = stamped_pose.pose.position.y;
+						extrema_trajectory = trajectory_score.trajectory;
+					}
+
+					if(stamped_pose.pose.position.x >= max_x)
+					{
+						max_x = stamped_pose.pose.position.x;
+						extrema_trajectory = trajectory_score.trajectory;
+					}
+
+					if(stamped_pose.pose.position.y >= max_y)
+					{
+						max_y = stamped_pose.pose.position.y;
+						extrema_trajectory = trajectory_score.trajectory;
+					}
+
+					// min_x = fmin(min_x, stamped_pose.pose.position.x);
+					// min_y = fmin(min_y, stamped_pose.pose.position.y);
+					// max_x = fmax(max_x, stamped_pose.pose.position.x);
+					// max_y = fmax(max_y, stamped_pose.pose.position.y);
+				}
+				// Visualize best cmd_vel		
+				PoseStamped stamped_pose;
+				stamped_pose.header.stamp		= ros::Time::now();
+				stamped_pose.header.frame_id	= "base_link";
+				for(const auto& trajectory_pose : trajectory_score.trajectory)
+				{					
+					stamped_pose.pose.position.x 	= trajectory_pose.pose.position.x;
+					stamped_pose.pose.position.y 	= trajectory_pose.pose.position.y;
+					simulation_plan.push_back(stamped_pose);
+				}
+				
+
+				trajectories.push_back(trajectory_score);
 			}
 		}
 	}
+	base_local_planner::publishPlan(simulation_plan, simulation_plan_pub_);	
 
-	ROS_DEBUG_NAMED(ROS_NAME, "Found %d valid arc's out of %d. Fails: dist %d | angle_measure %d | arrival_angle %d | radius_diff %d", 	(int)arc_footprints.size(),
-																																		index - start_index,
-																																		dist_fails, 			
-																																		angle_measure_fails, 
-																																		arrival_angle_fails, 
-																																		radius_diff_fails);
+	ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
+	
+	//! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
+	max_x = 5.0;
+	max_y = 5.0;
+	min_x = -5.0;
+	min_y = -5.0;
+
 	// Make bounding square
-	rose_geometry::Point lbs_point;
-	vector<rose_geometry::Point> largest_bounding_square;
-	lbs_point.x = max_x + 0.1;
-	lbs_point.y = max_y + 0.1;
-	largest_bounding_square.push_back(lbs_point);
-	lbs_point.x = min_x - 0.1;
-	lbs_point.y = max_y + 0.1;
-	largest_bounding_square.push_back(lbs_point);
-	lbs_point.x = min_x - 0.1;
-	lbs_point.y = min_y - 0.1;
-	largest_bounding_square.push_back(lbs_point);
-	lbs_point.x = max_x + 0.1;
-	lbs_point.y = min_y - 0.1;
-	largest_bounding_square.push_back(lbs_point);
+	// rose_geometry::Point lbs_point;
+	// vector<rose_geometry::Point> largest_bounding_square;
+	// lbs_point.x = max_x;
+	// lbs_point.y = max_y;
+	// largest_bounding_square.push_back(lbs_point);
+	// lbs_point.x = min_x;
+	// lbs_point.y = max_y;
+	// largest_bounding_square.push_back(lbs_point);
+	// lbs_point.x = min_x;
+	// lbs_point.y = min_y;
+	// largest_bounding_square.push_back(lbs_point);
+	// lbs_point.x = max_x;
+	// lbs_point.y = min_y;
+	// largest_bounding_square.push_back(lbs_point);
+
+	// Create polygon surrounding the circumscribed radius of the robot
+	vector<rose_geometry::Point> check_area_polygon = createBoundingPolygon(global_pose_.pose.position, transformed_footprint_, circumscribed_radius_ * 1.5);
+
+	publishPolygon(check_area_polygon, "check_area_polygon");
 
 	float min_dist 						= 1e6;
 	float max_dist 						= -1e6;
@@ -674,70 +703,78 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 	float max_cost 						= -1e6;
 	float min_radius_diff				= 1e6;
 	float max_radius_diff				= -1e6;
-	auto lethal_cells 					= getLethalCellsInPolygon(largest_bounding_square);
 
-	// Normalize clearances (cost)
-	//! @todo OH[IMPR]: RN Give cost a correct name, in this case clearance
-	for(auto& arc_footprint : arc_footprints)
+	// Add all lethal points in a square surrounding the trajectory.
+	FCC_.clearPoints();
+	// Get lethal cells surrounding the robot
+	vector<rose_geometry::Point> lethal_points = getCellsPoints(getLethalCellsInPolygon(check_area_polygon), true, transformed_footprint_);
+	ROS_INFO_NAMED(ROS_NAME, "%d lethal points.", (unsigned int)lethal_points.size());
+	StampedVertices stamped_lethal_points;
+	for(const auto& lethal_point : lethal_points)
+	{
+		std_msgs::Header header;
+		header.stamp 	= ros::Time::now();
+		header.frame_id = "map";
+
+		StampedVertex stamped_vertex(header, lethal_point);
+		stamped_lethal_points.push_back( stamped_vertex );
+	}
+	ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
+	FCC_.addPoints(stamped_lethal_points);
+
+	ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for colissions.", (unsigned int)trajectories.size());
+
+	// Normalize
+	//! @todo OH[IMPR]: Add cost of being close to walls
+	for(auto& trajectory_score : trajectories)
 	{ 
-		if( not trajectoryCollidesWithCells(arc_footprint, lethal_cells) )
+		if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
 		{
-			if(arc_footprint.getCost() < min_cost)
-				min_cost = arc_footprint.getCost();
+			if(trajectory_score.score < min_dist)
+				min_dist = trajectory_score.score;
 
-			if(arc_footprint.getCost() > max_cost)
-				max_cost = arc_footprint.getCost();
+			if(trajectory_score.score > max_dist)
+				max_dist = trajectory_score.score;
 
-			if(arc_footprint.getGlobalPathDistance() < min_dist)
-				min_dist = arc_footprint.getGlobalPathDistance();
+			if(trajectory_score.cost < min_cost)
+				min_cost = trajectory_score.cost;
 
-			if(arc_footprint.getGlobalPathDistance() > max_dist)
-				max_dist = arc_footprint.getGlobalPathDistance();
+			if(trajectory_score.cost > max_cost)
+				max_cost = trajectory_score.cost;
 
-			// Determine minimal and maximal arc difference
-			float radius_difference = fabs(current_radius - arc_footprint.getArcRef().getSignedRadius()); 
+			// Determine minimal and maximal radius difference
+			float radius_difference = fabs(current_radius - radiusFromVelocity(trajectory_score.velocity)); 
 			min_radius_diff 		= fmin(min_radius_diff, radius_difference);
 			max_radius_diff 		= fmax(max_radius_diff, radius_difference);
 
-			valid_arc_footprints.push_back(arc_footprint);
-
-			// Visualize all tried arcs
-			PoseStamped arc_point;
-			
-			for(const auto& visualize_pose : arc_footprint.getArcRef().getExtraPoses())
-			{					
-				arc_point.header.stamp = ros::Time::now();
-				arc_point.header.frame_id = "map";
-				arc_point.pose.position.x = visualize_pose.position.x;
-				arc_point.pose.position.y = visualize_pose.position.y;
-				simulation_plan.push_back(arc_point);
-			}	
+			valid_trajectories.push_back(trajectory_score);
 		}
 		else
 			collission_fails++;
 	}
 
-	ROS_INFO_NAMED(ROS_NAME, "Found %d valid arc(s), %d colliding footprint arc's.", (int)valid_arc_footprints.size(), collission_fails);
+	
+	ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
 
-	ArcFootprint* best_arc_trajectory 	= NULL;
-	float best_ranking 					= -1e6;
-	for(const auto& arc_footprint : valid_arc_footprints)
+	TrajectoryScore best_trajectory;
+	float best_ranking = -1e6;
+	for(const auto& trajectory : valid_trajectories)
 	{
 		float normalized_dist_score = 0.0;
 		if(max_dist - min_dist != 0.0)
-			normalized_dist_score = (arc_footprint.getGlobalPathDistance() - min_dist)/(max_dist - min_dist);
+			normalized_dist_score = (trajectory.score - min_dist)/(max_dist - min_dist);
 
 		float normalized_cost = 1.0;
-		if(max_cost - min_cost != 0.0 and arc_footprint.getCost() - min_cost != 0.0)
-			normalized_cost 	= (arc_footprint.getCost() - min_cost)/(max_cost - min_cost);
+		if(max_cost - min_cost != 0.0 and trajectory.cost - min_cost != 0.0)
+			normalized_cost 	= (trajectory.cost - min_cost)/(max_cost - min_cost);
 
 		// Higher ranking for arc with same radius
-		float current_radius_difference = fabs(current_radius - arc_footprint.getArcRef().getSignedRadius()); 
+		float current_radius_difference = fabs(current_radius - radiusFromVelocity(trajectory.velocity)); 
 		float normalized_arc_radius_diff = 0.0;
 		if(max_radius_diff - min_radius_diff != 0.0)
 			normalized_arc_radius_diff 	= fabs(current_radius_difference - min_radius_diff)/fabs(max_radius_diff - min_radius_diff);
 
-		float ranking = ( (distance_weight_*normalized_dist_score) * (clearance_weight_*normalized_cost));
+		float ranking = (distance_weight_*normalized_dist_score) + (clearance_weight_*normalized_cost);
 
 		ranking += difference_weight_*normalized_arc_radius_diff;
 	
@@ -748,42 +785,25 @@ bool ArcLocalPlanner::findBestArc(int n, const vector<PoseStamped>& plan, Arc& b
 		
 		if(ranking >= best_ranking)
 		{
-			ROS_DEBUG_NAMED(ROS_NAME, " New best ranking                        = %.6f", ranking);
-			ROS_DEBUG_NAMED(ROS_NAME, "  Normalized distance score       	   = %.6f", distance_weight_*normalized_dist_score);
-			ROS_DEBUG_NAMED(ROS_NAME, "  Squared distance to obstacles cost     = %.6f", clearance_weight_*normalized_cost);
-			ROS_DEBUG_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f = %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
-			ROS_DEBUG_NAMED(ROS_NAME, "  Resulting ranking      				   = %.6f", ranking);
+			ROS_INFO_NAMED(ROS_NAME, " New best ranking                        = %.6f", ranking);
+			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.2f   	   = %.6f", trajectory.score, distance_weight_*normalized_dist_score);
+			ROS_INFO_NAMED(ROS_NAME, "  Squared distance to obstacles cost     = %.6f", clearance_weight_*normalized_cost);
+			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f = %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
+			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking      				   = %.6f", ranking);
 			best_ranking 			= ranking;
-			best_arc_trajectory 	= new ArcFootprint(arc_footprint);
-			prev_ranking_ 			= ranking;
+			best_trajectory 		= trajectory;
 		}
 	}
-	
-	// Visualize allowed arcs
-	base_local_planner::publishPlan(simulation_plan, simulation_plan_pub_);
 
-	if(best_arc_trajectory != NULL)
-	{
-		best_arc 				= best_arc_trajectory->getArc(); 
-		prev_index_ 			= best_arc_trajectory->global_path_index_;
-		publishPolygon(best_arc_trajectory->getPolygonRef(), "trajectory_poly_NOCOL");
-	}
+	
+
+	if(not best_trajectory.trajectory.empty())
+		best_cmd_vel = best_trajectory.velocity;
 	else
 	{
-		prev_ranking_ 	= -1.0;
-		prev_index_ 	= 0;
-		ROS_DEBUG_NAMED(ROS_NAME, "findBestArc: NONE/%d chosen as best index!", n - 1);
+		ROS_DEBUG_NAMED(ROS_NAME, "No valid command velocities found.");
 		return false;
 	}
-
-	// Visualize stop_pose
-	Pose stop_pose 	= best_arc.getStopPoseExtra();
-	auto transformed_footprint_stop = footprint_;
-	rotatePointsAroundOrigin(tf::getYaw(stop_pose.orientation) , transformed_footprint_stop);
-	translatePoints(stop_pose.position.x , stop_pose.position.y , transformed_footprint_stop);
-	publishPolygon(transformed_footprint_stop, "final_pose");
-
-	ROS_DEBUG_NAMED(ROS_NAME, "findBestArc: %d/%d chosen as best index", prev_index_, n - 1);
 
 	return true;
 }
@@ -797,7 +817,7 @@ vector<Position2DInt> ArcLocalPlanner::getLethalCellsInPolygon(const vector<rose
 	vector<Position2DInt> lethal_square_cells;
 	vector<Position2DInt> square_cells = world_model_->getFootprintCells(map_origin_pose, toROSmsgs(polygon), true);
 
-	ROS_DEBUG_NAMED(ROS_NAME, "%d cells found in bounding square around arc.", (int)square_cells.size());
+	ROS_INFO_NAMED(ROS_NAME, "%d cells found in bounding square around arc.", (int)square_cells.size());
 
 	// Filter out only the lethal cells
 	for(const auto& cell : square_cells)
@@ -806,13 +826,13 @@ vector<Position2DInt> ArcLocalPlanner::getLethalCellsInPolygon(const vector<rose
 			lethal_square_cells.push_back(cell);		
 	}
 
-	ROS_DEBUG_NAMED(ROS_NAME, "%d lethal cells found in bounding square around arc.", (int)lethal_square_cells.size());
+	ROS_INFO_NAMED(ROS_NAME, "%d lethal cells found in bounding square around arc.", (int)lethal_square_cells.size());
 
 	return lethal_square_cells;
 }
 int the_id = 1000;
 
-vector<rose_geometry::Point> ArcLocalPlanner::getCellsPoints(	const vector<Position2DInt>& cells, 
+std::vector<rose_geometry::Point> ArcLocalPlanner::getCellsPoints(	const vector<Position2DInt>& cells, 
 																		bool only_center_point, 
 																		const vector<rose_geometry::Point>& filter_polygon)
 {
@@ -1069,8 +1089,8 @@ Pose ArcLocalPlanner::getAimAtPathPose(			const Pose& global_pose,
 // 2 -> requested angle reached
 VelCalcResult ArcLocalPlanner::calculateDriveVelocityCommand(Twist& cmd_vel)
 {
-	Arc best_arc;
-	if( not findBestArc(100, transformed_plan_, best_arc))
+	Twist best_vel;
+	if( not findBestCommandVelocity(transformed_plan_, best_vel))
 	{
 		// Forget the where the search of arc's was
 		prev_index_ = 0;
@@ -1078,47 +1098,14 @@ VelCalcResult ArcLocalPlanner::calculateDriveVelocityCommand(Twist& cmd_vel)
 		return FAILED; 
 	}
 
-	vector<PoseStamped> local_plan = generateLocalPlan(global_pose_.pose, best_arc);
-	base_local_planner::publishPlan(local_plan, l_plan_pub_);
+	ROS_INFO_NAMED(ROS_NAME, "Best velocity found: [%.2f, %.2f | %.2f]", best_vel.linear.x, best_vel.linear.y, best_vel.angular.z);
 
-	float radius 	= best_arc.getSignedRadius();						
-	float dist 		= distance(global_pose_.pose.position, best_arc.getStopPoint());
-	float velocity 	= ((MAX_VEL_ABS - MIN_VEL_ABS)/DISTANCE_MAX_VEL)*dist + MIN_VEL_ABS;
-
-	rose_conversions::limit(-MAX_VEL_ABS, MAX_VEL_ABS, &velocity);
+	// rose_conversions::limit(-MAX_VEL_ABS, MAX_VEL_ABS, &velocity);
 
 	// Calculate velocity command
 	Twist new_cmd_vel;
-	new_cmd_vel.linear.x  = velocity;
-	new_cmd_vel.linear.y  = 0.0;
-	new_cmd_vel.linear.z  = 0.0;
-	new_cmd_vel.angular.x = 0.0;
-	new_cmd_vel.angular.y = 0.0;
-	new_cmd_vel.angular.z = velocity/radius;
-	
-
-	ROS_DEBUG_NAMED(ROS_NAME, "new_cmd_vel.linear.x : %.2f", new_cmd_vel.linear.x);
-	ROS_DEBUG_NAMED(ROS_NAME, "new_cmd_vel.angular.z: %.2f", new_cmd_vel.angular.z);
-
-	// Limit angular velocity, recalculate tangential velocity
-	if(new_cmd_vel.angular.z >= MIN_VEL_THETA)
-	{
-		new_cmd_vel.angular.z = fmin(MAX_VEL_THETA, new_cmd_vel.angular.z);
-		new_cmd_vel.linear.x  = new_cmd_vel.angular.z*radius;
-	}
-	else if(new_cmd_vel.angular.z <= -MIN_VEL_THETA)
-	{
-		new_cmd_vel.angular.z = fmax(-MAX_VEL_THETA, new_cmd_vel.angular.z);
-		new_cmd_vel.linear.x  = new_cmd_vel.angular.z*radius;
-	}
-	else
-	{
-		// Just drive straight if angular velocity is lower that minimal value
-		new_cmd_vel.angular.z = 0.0;
-	}
-
-	ROS_DEBUG_NAMED(ROS_NAME, "LIMITED new_cmd_vel.linear.x : %.2f", new_cmd_vel.linear.x);
-	ROS_DEBUG_NAMED(ROS_NAME, "LIMITED new_cmd_vel.angular.z: %.2f", new_cmd_vel.angular.z);
+	new_cmd_vel 	= best_vel;
+	float radius 	= radiusFromVelocity(best_vel);						
 
 	//! @todo OH: Limit speeds, collission detection	
 	ROS_INFO_THROTTLE_NAMED(ALP_INFO_THROTTLE, ROS_NAME, "Driving...");
@@ -1272,15 +1259,19 @@ VelCalcResult ArcLocalPlanner::calculateStrafeVelocityCommand(Twist& cmd_vel)
 	return BUSY;
 }
 
+float ArcLocalPlanner::radiusFromVelocity(const Twist& velocity)
+{
+	if(local_vel_.angular.z == 0.0)
+		return 10000.0; 	// Very large (as good as inf)
+	else
+		return sqrt(local_vel_.linear.x*local_vel_.linear.x + local_vel_.linear.y*local_vel_.linear.y)/local_vel_.angular.z;
+}
+
 float ArcLocalPlanner::currentRadius()
 {
-	float r;
-	if(local_vel_.angular.z != 0.0)
-		r = sqrt(local_vel_.linear.x*local_vel_.linear.x + local_vel_.linear.y*local_vel_.linear.y)/local_vel_.angular.z;
-	else
-		r = 10000000.0; 	// Very large (as good as inf)
-
+	float r = radiusFromVelocity(local_vel_);
 	ROS_DEBUG_NAMED(ROS_NAME, "x, y, yaw | %.3f, %.3f, %.3f | r: %.4f | ", local_vel_.linear.x, local_vel_.linear.y, local_vel_.angular.z, r);
+	return r;
 }
 
 Arc ArcLocalPlanner::createArcFromPoseAndTarget(const Pose& start_pose, const rose_geometry::Point& check_point)
@@ -1290,15 +1281,8 @@ Arc ArcLocalPlanner::createArcFromPoseAndTarget(const Pose& start_pose, const ro
 
 Arc ArcLocalPlanner::createArcFromVelocity(const Pose& start_pose, const Twist& vel, const float& percentage_of_circle)
 {
-	float r;
-	if(vel.angular.z != 0.0)
-		r = sqrt(vel.linear.x*vel.linear.x)/vel.angular.z;
-	else
-		r = 1000.0; 	// Very large (as good as inf)
-
 	// ROS_INFO_NAMED(ROS_NAME, "Createing arc from cmdvel [ %.4f, %.4f ] with radius %.2f and percentage_of_circle %.2f;", vel.linear.x, vel.angular.z, r, percentage_of_circle);
-
-	return Arc(start_pose.position, tf::getYaw(start_pose.orientation), r, percentage_of_circle);
+	return Arc(start_pose.position, tf::getYaw(start_pose.orientation), radiusFromVelocity(vel), percentage_of_circle);
 }
 
 // Direction positive is CCW negative is CW
@@ -1318,7 +1302,6 @@ float ArcLocalPlanner::findMaxPossibleRotation(	const Pose& pose,
 	ROS_DEBUG_NAMED(ROS_NAME, "tf::getYaw(pose.orientation): %.4f", tf::getYaw(pose.orientation));
 
 	// Create polygon surrounding the circumscribed radius of the robot
-	rose_geometry::Point point;
 	vector<rose_geometry::Point> check_area_polygon = createBoundingPolygon(pose.position, footprint, circumscribed_radius_);
 
 	// Get lethal cells surrounding the robot
@@ -1567,8 +1550,8 @@ Pose ArcLocalPlanner::findStrafeTarget(		const vector<rose_geometry::Point>& foo
 }
 
 vector<rose_geometry::Point> ArcLocalPlanner::createBoundingPolygon(	const rose_geometry::Point center,
-																				const vector<rose_geometry::Point> polygon,
-																				float margin)
+																		const vector<rose_geometry::Point> polygon,
+																		float margin)
 {
 	rose_geometry::Point point;
 	vector<rose_geometry::Point> bounding_polygon;
@@ -1595,21 +1578,21 @@ unsigned int ArcLocalPlanner::getClosestWaypointIndex(	const Pose& global_pose,
 }
 
 rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const Pose& global_pose, 
-																	const vector<PoseStamped>& plan,
-																	unsigned int n)
+															const vector<PoseStamped>& plan,
+															unsigned int n)
 {
 	unsigned int index = 0;
 	return getClosestWaypoint(global_pose, plan, index, n);
 }
 
 rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const Pose& global_pose, 
-							  										const vector<PoseStamped>& plan,
-							  										unsigned int& index,
-							  										unsigned int n)
+							  								const vector<PoseStamped>& plan,
+							  								unsigned int& index,
+							  								unsigned int n)
 {
-	float min_distance 			= -1.0;
+	float min_distance = -1.0;
 	vector<PoseStamped>::const_iterator waypoint_it;
-	vector<PoseStamped>::const_iterator closest_waypoint_it 	= plan.begin();	
+	vector<PoseStamped>::const_iterator closest_waypoint_it = plan.begin();	
 	for(waypoint_it = plan.begin(); waypoint_it != plan.end(); ++waypoint_it)
 	{
 	  	float distance = rose_geometry::distanceXY((*waypoint_it).pose, global_pose);

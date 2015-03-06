@@ -70,6 +70,7 @@
 #include "rose_twist_moving_average_filter/twist_maf.hpp"
 
 #include "server_multiple_client/server_multiple_client.hpp"
+#include "rose_footprint_collision_checker/footprint_collision_checker.hpp"
 
 using std::string;
 using std::vector;
@@ -92,6 +93,14 @@ enum StatemachineState
 enum VelCalcResult
 {
     FAILED, BUSY, FINISHED
+};
+
+struct TrajectoryScore
+{
+    Twist       velocity;
+    Trajectory  trajectory;
+    float       score;
+    float       cost;
 };
 
 class ArcLocalPlanner : public nav_core::BaseLocalPlanner
@@ -133,7 +142,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     void    drawPoint(float x, float y, int id, string frame_id, float r, float g, float b);
     void    drawCircle(float x, float y, float radius, int id, string frame_id, float r, float g, float b);
 
-    bool    findBestArc(int n, const vector<PoseStamped>& plan, Arc& arc);
+    bool    findBestCommandVelocity(const vector<PoseStamped>& plan, Twist& best_cmd_vel);
     rose_geometry::Point   findFootprintSteepestDescent(  const Pose& global_pose, 
                                                                     const std::vector<Position2DInt>& footprint_cells);
     Pose   findStrafeTarget(    const vector<rose_geometry::Point>& footprint,
@@ -166,12 +175,13 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     VelCalcResult calculateDriveVelocityCommand(Twist& cmd_vel);
     VelCalcResult calculateRotateVelocityCommand(Twist& cmd_vel);
     VelCalcResult calculateStrafeVelocityCommand(Twist& cmd_vel);
+    float   radiusFromVelocity(const Twist& velocity);
     float   currentRadius();
     Arc     createArcFromPoseAndTarget(const Pose& start_pose, const rose_geometry::Point& check_waypoint);
     Arc     createArcFromVelocity(const Pose& start_pose, const Twist& vel, const float& percentage_of_circle);
     
-    vector<Position2DInt>                       getLethalCellsInPolygon(const vector<rose_geometry::Point>& polygon);
-    vector<rose_geometry::Point>      getCellsPoints( const vector<Position2DInt>& cells, 
+    std::vector<Position2DInt>               getLethalCellsInPolygon(const vector<rose_geometry::Point>& polygon);
+    std::vector<rose_geometry::Point>        getCellsPoints(    const vector<Position2DInt>& cells, 
                                                                 bool only_center_point, 
                                                                 const vector<rose_geometry::Point>& filter_polygon = vector<rose_geometry::Point>());
 
@@ -250,6 +260,8 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     TwistMAF cmd_vel_maf_; 
 
     ros::Time begin_;
+
+    FootprintCollisionChecker FCC_;
 
 };
 };
