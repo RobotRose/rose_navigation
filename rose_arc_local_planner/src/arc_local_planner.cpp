@@ -25,10 +25,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
 #define AT_GOAL_ANGLE 			0.10
-#define CMD_VEL_MAF_WINDOW 		3	
-
-//! @todo OH: Use Rose20Platform class
-
+#define CMD_VEL_MAF_WINDOW 		2	
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
@@ -570,9 +567,9 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 7;
-	int num_rot_velocities 			= 12;
-	int num_dts 					= 4;
+	int num_tang_velocities 		= 6;
+	int num_rot_velocities 			= 11;
+	int num_dts 					= 3;
 
 	float stepsize_tang_velocities  = 0.05;
 	float stepsize_rot_velocities  	= 0.06;
@@ -619,9 +616,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path)
 		    	{
-					// drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, i*j*k, "map", 1.0, 0.0, 0.0);
-					// drawPoint(plan.at(path_index).pose.position.x, plan.at(path_index).pose.position.y, i*j*k * i*j*k, "map", 0.0, 1.0, 0.0);
-		   //  		ROS_INFO("path_index: %d, end_point_distance_to_path: %2.2f, robot_distance_to_path: %2.2f",path_index , end_point_distance_to_path, robot_distance_to_path);
 		    		distance_fails++;
 		    		continue;
 		    	}
@@ -635,7 +629,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 					max_x = fmax(max_x, stamped_pose.pose.position.x);
 					max_y = fmax(max_y, stamped_pose.pose.position.y);
 				}
-				// Visualize best cmd_vel		
+				// Visualize cmd_vels		
 				PoseStamped stamped_pose;
 				stamped_pose.header.stamp		= ros::Time::now();
 				stamped_pose.header.frame_id	= "base_link";
@@ -786,7 +780,7 @@ vector<Position2DInt> ArcLocalPlanner::getLethalCellsInPolygon(const vector<rose
 	vector<Position2DInt> lethal_square_cells;
 	vector<Position2DInt> square_cells = world_model_->getFootprintCells(map_origin_pose, toROSmsgs(polygon), true);
 
-	ROS_INFO_NAMED(ROS_NAME, "%d cells found in bounding square around arc.", (int)square_cells.size());
+	ROS_DEBUG_NAMED(ROS_NAME, "%d cells found in bounding square around arc.", (int)square_cells.size());
 
 	// Filter out only the lethal cells
 	for(const auto& cell : square_cells)
@@ -795,7 +789,7 @@ vector<Position2DInt> ArcLocalPlanner::getLethalCellsInPolygon(const vector<rose
 			lethal_square_cells.push_back(cell);		
 	}
 
-	ROS_INFO_NAMED(ROS_NAME, "%d lethal cells found in bounding square around arc.", (int)lethal_square_cells.size());
+	ROS_DEBUG_NAMED(ROS_NAME, "%d lethal cells found in bounding square around arc.", (int)lethal_square_cells.size());
 
 	return lethal_square_cells;
 }
