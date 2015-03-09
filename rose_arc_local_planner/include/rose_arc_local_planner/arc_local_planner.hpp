@@ -118,10 +118,10 @@ public:
     void show(const float& rate = 0.0)
     {
         purge();
-        
+
         if( start_times.size() != finish_times.size())
         {
-            ROS_ERROR_NAMED(ROS_NAME, "Timing: The number of start times is not equal to the number of stop times.");
+            ROS_ERROR("Timing '%s': The number of start times is not equal to the number of stop times.", name_.c_str());
         }
 
         float sum = 0;
@@ -135,9 +135,9 @@ public:
 
 
         if(rate != 0.0)
-            ROS_INFO_THROTTLE_NAMED(rate, ROS_NAME, "Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
+            ROS_INFO_THROTTLE(rate, "Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
         else
-            ROS_INFO_NAMED(ROS_NAME, "Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
+            ROS_INFO("Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
     }
 
     void start()
@@ -188,6 +188,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     void    loadParameters();
     void    CB_alarm_changed(const bool& new_alarm_value);
     bool    isInitialized();
+    bool    updateRobotState();
     void    publishPolygon(vector<rose_geometry::Point> transformed_footprint, string name);
 
     unsigned int    getClosestWaypointIndex(    const PoseStamped& global_pose, 
@@ -280,7 +281,9 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     // Robot state
     PoseStamped         global_pose_;
     Twist               local_vel_;
-    
+
+    tf::Stamped<tf::Pose> global_pose_tf_;
+
     vector<rose_geometry::Point>       footprint_;
     vector<rose_geometry::Point>       transformed_footprint_;
     double              inscribed_radius_;
@@ -328,11 +331,12 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
 
     TwistMAF cmd_vel_maf_; 
 
-    ros::Time begin_;
-
     FootprintCollisionChecker FCC_;
 
     Timing timing_a_;
+    Timing timing_b_;
+    Timing timing_c_;
+    Timing timing_d_;
 };
 };
 
