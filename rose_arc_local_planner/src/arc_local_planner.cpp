@@ -558,7 +558,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	best_cmd_vel = all_zero;
 
 	Trajectory 						simulation_plan;
-	Trajectory 						extrema_trajectory;
 	std::vector<TrajectoryScore> 	trajectories;
 	std::vector<TrajectoryScore> 	valid_trajectories;
 	float min_x = 1e6;
@@ -569,7 +568,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	int distance_fails  	= 0;
 	int collission_fails 	= 0;
 
-	float 	current_radius  = currentRadius();
+	float current_radius  = currentRadius();
 
 	int num_tang_velocities 		= 6;
 	int num_rot_velocities 			= 8;
@@ -621,34 +620,10 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				for(const auto& stamped_pose : trajectory_score.trajectory)
 				{
-					if(stamped_pose.pose.position.x <= min_x)
-					{
-						min_x = stamped_pose.pose.position.x;
-						extrema_trajectory = trajectory_score.trajectory;
-					}
-
-					if(stamped_pose.pose.position.y <= min_y)
-					{
-						min_y = stamped_pose.pose.position.y;
-						extrema_trajectory = trajectory_score.trajectory;
-					}
-
-					if(stamped_pose.pose.position.x >= max_x)
-					{
-						max_x = stamped_pose.pose.position.x;
-						extrema_trajectory = trajectory_score.trajectory;
-					}
-
-					if(stamped_pose.pose.position.y >= max_y)
-					{
-						max_y = stamped_pose.pose.position.y;
-						extrema_trajectory = trajectory_score.trajectory;
-					}
-
-					// min_x = fmin(min_x, stamped_pose.pose.position.x);
-					// min_y = fmin(min_y, stamped_pose.pose.position.y);
-					// max_x = fmax(max_x, stamped_pose.pose.position.x);
-					// max_y = fmax(max_y, stamped_pose.pose.position.y);
+					min_x = fmin(min_x, stamped_pose.pose.position.x);
+					min_y = fmin(min_y, stamped_pose.pose.position.y);
+					max_x = fmax(max_x, stamped_pose.pose.position.x);
+					max_y = fmax(max_y, stamped_pose.pose.position.y);
 				}
 				// Visualize best cmd_vel		
 				PoseStamped stamped_pose;
@@ -675,22 +650,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	max_y = 5.0;
 	min_x = -5.0;
 	min_y = -5.0;
-
-	// Make bounding square
-	// rose_geometry::Point lbs_point;
-	// vector<rose_geometry::Point> largest_bounding_square;
-	// lbs_point.x = max_x;
-	// lbs_point.y = max_y;
-	// largest_bounding_square.push_back(lbs_point);
-	// lbs_point.x = min_x;
-	// lbs_point.y = max_y;
-	// largest_bounding_square.push_back(lbs_point);
-	// lbs_point.x = min_x;
-	// lbs_point.y = min_y;
-	// largest_bounding_square.push_back(lbs_point);
-	// lbs_point.x = max_x;
-	// lbs_point.y = min_y;
-	// largest_bounding_square.push_back(lbs_point);
 
 	// Create polygon surrounding the circumscribed radius of the robot
 	vector<rose_geometry::Point> check_area_polygon = createBoundingPolygon(global_pose_.pose.position, transformed_footprint_, circumscribed_radius_ * 1.5);
@@ -785,11 +744,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 		
 		if(ranking >= best_ranking)
 		{
-			ROS_INFO_NAMED(ROS_NAME, " New best ranking                        = %.6f", ranking);
-			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.2f   	   = %.6f", trajectory.score, distance_weight_*normalized_dist_score);
-			ROS_INFO_NAMED(ROS_NAME, "  Squared distance to obstacles cost     = %.6f", clearance_weight_*normalized_cost);
-			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f = %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
-			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking      				   = %.6f", ranking);
+			ROS_INFO_NAMED(ROS_NAME, " New best ranking							= %.6f", ranking);
+			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.4f			= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
+			ROS_INFO_NAMED(ROS_NAME, "  Distance from path cost %2.4f			= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
+			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f 	= %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
+			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking 						= %.6f", ranking);
 			best_ranking 			= ranking;
 			best_trajectory 		= trajectory;
 		}

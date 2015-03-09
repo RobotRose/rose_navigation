@@ -4,7 +4,7 @@
 cost_function_weights:
 
     # Distance over global path score
-    distance: 0.5
+    distance: 1.1
 
     # Clearance towards obstacles score
     clearance: 1.0
