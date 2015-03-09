@@ -271,6 +271,8 @@ Trajectory FootprintCollisionChecker::calculatePoseTrajectory(  const geometry_m
     dyaw            = dt*vel.angular.z;
 
     geometry_msgs::PoseStamped moving_pose = frame_of_motion_;
+
+    ros::Time generation_time = ros::Time::now();;
     
     float at_t          = 0.0;
     float at_distance   = 0.0;
@@ -283,6 +285,8 @@ Trajectory FootprintCollisionChecker::calculatePoseTrajectory(  const geometry_m
 
         translation         = rose_geometry::rotate2DVector(translation, dyaw);
 
+        moving_pose.header.stamp     = generation_time;
+        moving_pose.header.frame_id  = frame_of_motion_.header.frame_id;
         trajectory.push_back(moving_pose);
         at_t        += dt;
         at_distance += sqrt(translation.x*translation.x + translation.y*translation.y);

@@ -608,18 +608,19 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 				drawPoint(trajectory_score.trajectory.back().pose.position.x, trajectory_score.trajectory.back().pose.position.y, i*j*k, "map", 0.5, color, 0.0);
 
 				// Set path distance
-				//! @todo OH [ERROR]: trajectory is NOT IN MAP FRAME!!!! Does not work
 				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back(), plan);
 				
-				// float distance_crow    = rose_geometry::distanceXY(trajectory_score.trajectory.front().pose, trajectory_score.trajectory.back().pose);
-				float distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, plan.at(path_index).pose);
-		    	if( path_index == 0 or rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose) <= distance_to_path)
+				float end_point_distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, plan.at(path_index).pose);
+				float robot_distance_to_path 	 = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
+
+		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path)
 		    	{
+		    		ROS_INFO("path_index: %d, end_point_distance_to_path: %2.2f, robot_distance_to_path: %2.2f",path_index , end_point_distance_to_path, robot_distance_to_path);
 		    		distance_fails++;
 		    		continue;
 		    	}
 				trajectory_score.score 	= path_index;
-				trajectory_score.cost 	= 1.0/distance_to_path;
+				trajectory_score.cost 	= 1.0/end_point_distance_to_path;
 
 				for(const auto& stamped_pose : trajectory_score.trajectory)
 				{
