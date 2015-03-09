@@ -619,10 +619,9 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path)
 		    	{
-					drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, i*j*k, "map", 1.0, 0.0, 0.0);
-					drawPoint(plan.at(path_index).pose.position.x, plan.at(path_index).pose.position.y, i*j*k * i*j*k, "map", 0.0, 1.0, 0.0);
-		    		
-		    		ROS_INFO("path_index: %d, end_point_distance_to_path: %2.2f, robot_distance_to_path: %2.2f",path_index , end_point_distance_to_path, robot_distance_to_path);
+					// drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, i*j*k, "map", 1.0, 0.0, 0.0);
+					// drawPoint(plan.at(path_index).pose.position.x, plan.at(path_index).pose.position.y, i*j*k * i*j*k, "map", 0.0, 1.0, 0.0);
+		   //  		ROS_INFO("path_index: %d, end_point_distance_to_path: %2.2f, robot_distance_to_path: %2.2f",path_index , end_point_distance_to_path, robot_distance_to_path);
 		    		distance_fails++;
 		    		continue;
 		    	}
