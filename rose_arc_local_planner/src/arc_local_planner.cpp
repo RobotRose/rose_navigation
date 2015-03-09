@@ -360,7 +360,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the align pose
-			    		state_target_pose_ = getAlignPose(global_pose_, transformed_plan_, 40, 40, 
+			    		state_target_pose_ = getAlignPose(global_pose_, transformed_plan_, 40, 20, 
 			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
 			    											);
 			    	}
