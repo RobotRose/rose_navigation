@@ -108,6 +108,9 @@ class FootprintCollisionChecker
     void publishPolygon(polygon transformed_footprint, std::string frame, std::string name);
     void drawPoint(const StampedVertex& stamped_point, int id, float r, float g, float b);
 
+    Polygon createAABB(const Polygon& polygon, float margin);
+    bool inAABB(const Vertex& point, const Polygon& aabb);
+
     ros::NodeHandle             n_;
     tf::TransformListener       tf_listener_;
     ros::Publisher              rviz_marker_pub_;

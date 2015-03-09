@@ -607,11 +607,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				// Set path distance
 				//! @todo OH [ERROR]: trajectory is NOT IN MAP FRAME!!!! Does not work
-				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back().pose, transformed_plan_);
+				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back().pose, plan);
 				
 				// float distance_crow    = rose_geometry::distanceXY(trajectory_score.trajectory.front().pose, trajectory_score.trajectory.back().pose);
-				float distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, transformed_plan_.at(path_index).pose);
-		    	if( path_index == 0)//rose_geometry::distanceXY(global_pose_.pose, transformed_plan_.at(path_index).pose) <= distance_to_path)
+				float distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, plan.at(path_index).pose);
+		    	if( path_index == 0)//rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose) <= distance_to_path)
 		    	{
 		    		distance_fails++;
 		    		continue;
