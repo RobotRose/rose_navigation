@@ -570,8 +570,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 6;
-	int num_rot_velocities 			= 12;
+	int num_tang_velocities 		= 7;
+	int num_rot_velocities 			= 10;
 	int num_dts 					= 3;
 
 	float stepsize_tang_velocities  = 0.05;
@@ -986,21 +986,18 @@ Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose,
 	
 	// Translate the point a certain distance backward
 	// First create a vector at the origin
-	float vx = 1.0;
+	float vx = std::fmin(rose_geometry::distanceXY(pose.position, pose.position), max_distance);
 	float vy = 0.0;
 
 	// Rotate the vector to align with the selected point on the path
-	rose_geometry::rotateVect(&vx, &vy, average_orientation);
-
-	// Set the length negative to move it backward a certain amount
-	rose_geometry::setVectorLengthXY(&vx, &vy, std::fmin(rose_geometry::distanceXY(pose.position, pose.position), max_distance));
+	rose_geometry::rotateVect(&vx, &vy, average_orientation + 2.0*M_PI);
 
 	// Add the vector to the selected path point
 	pose.position.x += vx;
 	pose.position.y += vy;
 
 	// Display the computed align position
-	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 1.0, 0.0, 1.0);
+	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 0.0, 0.0);
 
 	return pose;
 }
