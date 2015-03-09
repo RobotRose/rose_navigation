@@ -570,12 +570,12 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 4;
+	int num_tang_velocities 		= 6;
 	int num_rot_velocities 			= 6;
 	int num_dts 					= 4;
 
 	float stepsize_tang_velocities  = 0.025;
-	float stepsize_rot_velocities  	= 0.1;
+	float stepsize_rot_velocities  	= 0.05;
 	float stepsize_dts  			= 0.2;
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
@@ -613,7 +613,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 				
 				// float distance_crow    = rose_geometry::distanceXY(trajectory_score.trajectory.front().pose, trajectory_score.trajectory.back().pose);
 				float distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, plan.at(path_index).pose);
-		    	if( path_index == 0)//rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose) <= distance_to_path)
+		    	if( path_index == 0 or rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose) <= distance_to_path)
 		    	{
 		    		distance_fails++;
 		    		continue;
