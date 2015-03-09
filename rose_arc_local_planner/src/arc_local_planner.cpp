@@ -570,13 +570,13 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 6;
-	int num_rot_velocities 			= 6;
+	int num_tang_velocities 		= 7;
+	int num_rot_velocities 			= 7;
 	int num_dts 					= 2;
 
 	float stepsize_tang_velocities  = 0.05;
-	float stepsize_rot_velocities  	= 0.1;
-	float stepsize_dts  			= 0.1;
+	float stepsize_rot_velocities  	= 0.025;
+	float stepsize_dts  			= 0.5;
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
 		float tangential_velocity = fmin( fmax( MIN_VEL_ABS
@@ -601,7 +601,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0 , 3.0);
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 1.0 , 3.0);
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
@@ -653,7 +653,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	}
 	base_local_planner::publishPlan(simulation_plan, simulation_plan_pub_);	
 
-	ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
+	// ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
 	
 	//! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
 	max_x = 5.0;
@@ -677,7 +677,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	FCC_.clearPoints();
 	// Get lethal cells surrounding the robot
 	vector<rose_geometry::Point> lethal_points = getCellsPoints(getLethalCellsInPolygon(check_area_polygon), true, transformed_footprint_);
-	ROS_INFO_NAMED(ROS_NAME, "%d lethal points.", (unsigned int)lethal_points.size());
+	// ROS_INFO_NAMED(ROS_NAME, "%d lethal points.", (unsigned int)lethal_points.size());
 	StampedVertices stamped_lethal_points;
 	for(const auto& lethal_point : lethal_points)
 	{
@@ -688,10 +688,10 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 		StampedVertex stamped_vertex(header, lethal_point);
 		stamped_lethal_points.push_back( stamped_vertex );
 	}
-	ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
+	// ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
 	FCC_.addPoints(stamped_lethal_points);
 
-	ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for colissions.", (unsigned int)trajectories.size());
+	// ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for colissions.", (unsigned int)trajectories.size());
 
 	// Normalize
 	//! @todo OH[IMPR]: Add cost of being close to walls
@@ -723,7 +723,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	}
 
 	
-	ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
+	// ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
 
 	TrajectoryScore best_trajectory;
 	float best_ranking = -1e6;
@@ -754,11 +754,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 		
 		if(ranking >= best_ranking)
 		{
-			ROS_INFO_NAMED(ROS_NAME, " New best ranking							= %.6f", ranking);
-			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.4f			= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
-			ROS_INFO_NAMED(ROS_NAME, "  Distance from path cost %2.4f			= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
-			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f 	= %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
-			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking 						= %.6f", ranking);
+			ROS_DEBUG_NAMED(ROS_NAME, " New best ranking							= %.6f", ranking);
+			ROS_DEBUG_NAMED(ROS_NAME, "  Normalized distance score %2.4f			= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
+			ROS_DEBUG_NAMED(ROS_NAME, "  Distance from path cost %2.4f			= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
+			ROS_DEBUG_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f 	= %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
+			ROS_DEBUG_NAMED(ROS_NAME, "  Resulting ranking 						= %.6f", ranking);
 			best_ranking 			= ranking;
 			best_trajectory 		= trajectory;
 		}
