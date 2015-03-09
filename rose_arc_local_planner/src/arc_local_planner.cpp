@@ -174,7 +174,7 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
 
 bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 {	
-	timing_a_.start();
+	
 
 	ros::Time end = ros::Time::now();
 	ros::Duration d = end - begin_; 
@@ -206,6 +206,8 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
     local_vel_.linear.x  = local_vel_tf.getOrigin().getX();
     local_vel_.linear.x  = local_vel_tf.getOrigin().getY();
     local_vel_.angular.z = tf::getYaw(local_vel_tf.getRotation());
+
+    timing_a_.start();
    
     //Transform the global plan to our frame
     ros::Time now = ros::Time::now();

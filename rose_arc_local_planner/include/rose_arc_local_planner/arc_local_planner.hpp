@@ -117,6 +117,8 @@ public:
 
     void show(const float& rate = 0.0)
     {
+        purge();
+        
         if( start_times.size() != finish_times.size())
         {
             ROS_ERROR_NAMED(ROS_NAME, "Timing: The number of start times is not equal to the number of stop times.");
@@ -136,8 +138,6 @@ public:
             ROS_INFO_THROTTLE_NAMED(rate, ROS_NAME, "Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
         else
             ROS_INFO_NAMED(ROS_NAME, "Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
-
-        purge();
     }
 
     void start()
