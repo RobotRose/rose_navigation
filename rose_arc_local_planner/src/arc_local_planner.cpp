@@ -983,7 +983,10 @@ Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose,
 		// average_orientation /= target_index_high - target_index_low;
 
 		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, average_orientation);
-	}		
+	}	
+
+	float vx = plan.at(target_index_high).pose.position.x - plan.at(target_index_low).pose.position.x;
+	float vy = plan.at(target_index_high).pose.position.y - plan.at(target_index_low).pose.position.y;
 	
 	Pose best_pose = global_pose.pose;
 	float min_dist = 1e12;
@@ -991,9 +994,7 @@ Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose,
 	{
 		Pose new_pose = pose;
 		// Translate the point a certain distance backward
-		// First create a vector at the origin
-		float vx = max_distance/20.0 * (float)i;
-		float vy = 0.0;
+		rose_geometry::setVectorLengthXY(&vx, &vy, max_distance/20.0 * (float)i);
 
 		// Rotate the vector to align with the selected point on the path
 		rose_geometry::rotateVect(&vx, &vy, average_orientation + 2.0*M_PI);
@@ -1219,8 +1220,8 @@ VelCalcResult ArcLocalPlanner::calculateStrafeVelocityCommand(Twist& cmd_vel)
 
 	// Calculate new velocity vector
 	Twist new_cmd_vel;
-	new_cmd_vel.linear.x  = 0.4*dx;
-	new_cmd_vel.linear.y  = 0.4*dy;
+	new_cmd_vel.linear.x  = 0.3*dx;
+	new_cmd_vel.linear.y  = 0.3*dy;
 	new_cmd_vel.linear.z  = 0.0;
 	new_cmd_vel.angular.x = 0.0;
 	new_cmd_vel.angular.y = 0.0;
