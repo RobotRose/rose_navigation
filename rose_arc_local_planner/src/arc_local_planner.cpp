@@ -10,8 +10,8 @@ namespace rose_navigation{
 #define MAX_VEL_THETA 			0.3
 #define MAX_VEL_THETA_INPLACE	0.4
 
-#define MIN_VEL_ABS 			0.15
-#define MIN_VEL_THETA 			0.0001
+#define MIN_VEL_ABS 			0.175
+#define MIN_VEL_THETA 			0.06
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
 #define MAX_ACC_Y 				0.4
