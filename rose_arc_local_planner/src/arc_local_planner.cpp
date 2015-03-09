@@ -44,6 +44,7 @@ ArcLocalPlanner::ArcLocalPlanner()
 	, odom_helper_("odom")
 	, state_(DRIVE)
 	, prev_state_(DRIVE)
+	, timing_a_("ALP timing A", 10)
 {}
 
 ArcLocalPlanner::ArcLocalPlanner(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros)
@@ -52,6 +53,7 @@ ArcLocalPlanner::ArcLocalPlanner(string name, tf::TransformListener* tf_listener
 	, odom_helper_("odom")  
 	, state_(DRIVE)
 	, prev_state_(DRIVE)
+	, timing_a_("ALP timing A", 10)
 {
 	initialize(name, tf_listener, costmap_ros);
 }
@@ -172,6 +174,8 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
 
 bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 {	
+	timing_a_.start();
+
 	ros::Time end = ros::Time::now();
 	ros::Duration d = end - begin_; 
 	ROS_INFO_NAMED(ROS_NAME, "ALP rate: %.2f", 1.0/d.toSec());	
@@ -218,6 +222,9 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
     	global_plan_.clear();
     	global_plan_.push_back(goal_point);
     }
+
+    timing_a_.stop();
+    timing_a_.show(0.5);
 
    	if(transformed_plan_.size() >= 1)
    	{
