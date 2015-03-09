@@ -601,7 +601,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0, 2.0);
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t, 3.0);
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
