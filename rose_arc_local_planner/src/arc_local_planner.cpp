@@ -10,7 +10,7 @@ namespace rose_navigation{
 #define MAX_VEL_THETA 			0.3
 #define MAX_VEL_THETA_INPLACE	0.4
 
-#define MIN_VEL_ABS 			0.05
+#define MIN_VEL_ABS 			0.15
 #define MIN_VEL_THETA 			0.0001
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
@@ -570,20 +570,23 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 6;
-	int num_rot_velocities 			= 16;
-	int num_dts 					= 5;
+	int num_tang_velocities 		= 4;
+	int num_rot_velocities 			= 6;
+	int num_dts 					= 4;
 
 	float stepsize_tang_velocities  = 0.025;
-	float stepsize_rot_velocities  	= 0.05;
-	float stepsize_dts  			= 0.1;
+	float stepsize_rot_velocities  	= 0.1;
+	float stepsize_dts  			= 0.2;
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = MIN_VEL_ABS + i*stepsize_tang_velocities;
+		float tangential_velocity = fmin( fmax( MIN_VEL_ABS
+										  	  , local_vel_.linear.x - num_tang_velocities*stepsize_tang_velocities/2.0 + i*stepsize_tang_velocities)
+										, MAX_VEL_ABS);
+
 		
 		for(int j = 0; j < num_rot_velocities; j++)
 		{
-			float rotational_velocity = -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + j*stepsize_rot_velocities;
+			float rotational_velocity = local_vel_.angular.z - ( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + j*stepsize_rot_velocities;
 
 			// if(fabs(rotational_velocity) < MIN_VEL_THETA)
 			// 	continue;
