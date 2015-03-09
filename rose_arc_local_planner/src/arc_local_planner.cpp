@@ -603,18 +603,25 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 				trajectory_score.velocity 	= velocity;
 				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0, 2.0);
 
-				//Arc arc = createArcFromVelocity(global_pose_.pose, velocity, t);
-				float color = (float)(i*j*k)/(float)(num_tang_velocities*num_rot_velocities*stepsize_dts);
-				drawPoint(trajectory_score.trajectory.back().pose.position.x, trajectory_score.trajectory.back().pose.position.y, i*j*k, "map", 0.5, color, 0.0);
+				// Get the end point of the trajectory in the plan frame.
+				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+				if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
+				{
+				    ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
+				    continue;
+				}
 
 				// Set path distance
-				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back(), plan);
+				int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
 				
-				float end_point_distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, plan.at(path_index).pose);
+				float end_point_distance_to_path = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
 				float robot_distance_to_path 	 = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
 
 		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path)
 		    	{
+					drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, i*j*k, "map", 1.0, 0.0, 0.0);
+					drawPoint(plan.at(path_index).pose.position.x, plan.at(path_index).pose.position.y, i*j*k * i*j*k, "map", 0.0, 1.0, 0.0);
+		    		
 		    		ROS_INFO("path_index: %d, end_point_distance_to_path: %2.2f, robot_distance_to_path: %2.2f",path_index , end_point_distance_to_path, robot_distance_to_path);
 		    		distance_fails++;
 		    		continue;
