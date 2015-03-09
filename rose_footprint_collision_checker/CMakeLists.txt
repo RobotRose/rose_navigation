@@ -41,6 +41,16 @@ add_library(rose_footprint_collision_checker SHARED
 target_link_libraries(rose_footprint_collision_checker ${catkin_LIBRARIES} 
 )
 
+add_executable(test_node 
+    src/test_node.cpp
+)
+
+add_dependencies(test_node ${PROJECT_NAME}_generate_messages_cpp)
+
+target_link_libraries(test_node
+    ${catkin_LIBRARIES}
+)
+
 #############
 ## Testing ##
 #############
