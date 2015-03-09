@@ -951,7 +951,7 @@ Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose,
 	int target_index_high 	= std::min((int)plan.size() - 1, closest_index + n + half_range );
 
 	// If this is the same point, we are at the end of the path, return the pose of the final point of the path
-	float average_orientation;
+	float average_orientation = 0.0;
 	if(target_index_low == target_index_high)
 	{
 		pose 				= plan.back().pose;
@@ -960,40 +960,60 @@ Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose,
 	else
 	{
 		// Select the position as the point on the path n points ahead
-		pose.position = plan.at(n_index).pose.position;
+		pose.position = plan.at(target_index_high).pose.position;
 
-		average_orientation = 0.0;
-		for(int i = target_index_low; i < target_index_high - 1; i++)
-		{
-			// Indicate range used for averaging
-			drawPoint(plan.at(i).pose.position.x, plan.at(i).pose.position.y, i, "map", 1.0, 1.0, 0.0);
+		// average_orientation = 0.0;
+		// for(int i = target_index_low; i < target_index_high - 1; i++)
+		// {
+		// 	// Indicate range used for averaging
+		// 	drawPoint(plan.at(i).pose.position.x, plan.at(i).pose.position.y, i, "map", 1.0, 1.0, 0.0);
 			
-			// Determine direction of path
-			average_orientation += rose_geometry::getAngle(plan.at(i).pose, plan.at(i + 1).pose);
-		}
+		// 	// Determine direction of path
+		// 	average_orientation += rose_geometry::getAngle(plan.at(i).pose, plan.at(i + 1).pose);
+		// }
+
+		// Indicate range
+		drawPoint(plan.at(target_index_low).pose.position.x, plan.at(target_index_low).pose.position.y, 0, "map", 1.0, 1.0, 0.0);
+		drawPoint(plan.at(target_index_high).pose.position.x, plan.at(target_index_high).pose.position.y, 1, "map", 1.0, 1.0, 0.0);
+			
+		// Determine direction of path
+		average_orientation = rose_geometry::getAngle(plan.at(target_index_low).pose, plan.at(target_index_high).pose);
 
 		// Average the oriention by dividing by the number of points
-		average_orientation /= target_index_high - target_index_low;
+		// average_orientation /= target_index_high - target_index_low;
 
 		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, average_orientation);
 	}		
 	
-	// Translate the point a certain distance backward
-	// First create a vector at the origin
-	float vx = std::fmin(rose_geometry::distanceXY(pose.position, pose.position), max_distance);
-	float vy = 0.0;
+	Pose best_pose = global_pose.pose;
+	float min_dist = 1e12;
+	for(int i = 0; i < 20; i++)
+	{
+		Pose new_pose = pose;
+		// Translate the point a certain distance backward
+		// First create a vector at the origin
+		float vx = max_distance/20.0 * (float)i;
+		float vy = 0.0;
 
-	// Rotate the vector to align with the selected point on the path
-	rose_geometry::rotateVect(&vx, &vy, average_orientation + 2.0*M_PI);
+		// Rotate the vector to align with the selected point on the path
+		rose_geometry::rotateVect(&vx, &vy, average_orientation + 2.0*M_PI);
 
-	// Add the vector to the selected path point
-	pose.position.x += vx;
-	pose.position.y += vy;
+		// Add the vector to the selected path point
+		new_pose.position.x += vx;
+		new_pose.position.y += vy;
+
+		float dist = rose_geometry::distanceXY(new_pose, global_pose.pose);
+		if(dist <= min_dist)
+		{
+			min_dist  = dist;
+			best_pose = new_pose; 
+		}
+	}
 
 	// Display the computed align position
-	drawPoint(pose.position.x, pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 0.0, 0.0);
+	drawPoint(best_pose.position.x, best_pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 0.0, 0.0);
 
-	return pose;
+	return best_pose;
 }
 
 Pose ArcLocalPlanner::getPathDirectionPose(		const PoseStamped& global_pose, 
