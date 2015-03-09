@@ -25,7 +25,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
 #define AT_GOAL_ANGLE 			0.10
-#define CMD_VEL_MAF_WINDOW 		1	
+#define CMD_VEL_MAF_WINDOW 		3	
 
 //! @todo OH: Use Rose20Platform class
 
@@ -570,12 +570,12 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 7;
-	int num_rot_velocities 			= 7;
-	int num_dts 					= 2;
+	int num_tang_velocities 		= 6;
+	int num_rot_velocities 			= 12;
+	int num_dts 					= 3;
 
 	float stepsize_tang_velocities  = 0.05;
-	float stepsize_rot_velocities  	= 0.025;
+	float stepsize_rot_velocities  	= 0.09;
 	float stepsize_dts  			= 0.5;
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
@@ -601,7 +601,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 1.0 , 3.0);
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.5 , 3.5);
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
