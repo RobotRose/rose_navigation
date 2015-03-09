@@ -10,4 +10,4 @@ cost_function_weights:
     clearance: 1.0
 
     # Arc difference cost
-    difference: 1.0
+    difference: -1.0
