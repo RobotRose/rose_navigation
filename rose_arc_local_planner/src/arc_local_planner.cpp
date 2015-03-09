@@ -572,11 +572,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	int num_tang_velocities 		= 6;
 	int num_rot_velocities 			= 6;
-	int num_dts 					= 4;
+	int num_dts 					= 2;
 
-	float stepsize_tang_velocities  = 0.025;
-	float stepsize_rot_velocities  	= 0.05;
-	float stepsize_dts  			= 0.2;
+	float stepsize_tang_velocities  = 0.05;
+	float stepsize_rot_velocities  	= 0.1;
+	float stepsize_dts  			= 0.1;
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
 		float tangential_velocity = fmin( fmax( MIN_VEL_ABS
@@ -601,7 +601,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t, 3.0);
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0 , 3.0);
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
