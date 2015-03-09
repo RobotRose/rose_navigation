@@ -49,27 +49,27 @@ ArcLocalPlanner::ArcLocalPlanner()
 	, prev_state_(DRIVE)
 {}
 
-ArcLocalPlanner::ArcLocalPlanner(string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros)
+ArcLocalPlanner::ArcLocalPlanner(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros)
 	: initialized_(false)
 	, costmap_ros_(NULL)
 	, odom_helper_("odom")  
 	, state_(DRIVE)
 	, prev_state_(DRIVE)
 {
-	initialize(name, tf, costmap_ros);
+	initialize(name, tf_listener, costmap_ros);
 }
 
 ArcLocalPlanner::~ArcLocalPlanner()
 {}
 
-void ArcLocalPlanner::initialize(string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros)
+void ArcLocalPlanner::initialize(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros)
 {
 	ROS_DEBUG_NAMED(ROS_NAME, "ArcLocalPlanner::initialize");
 
 	if(!initialized_)
 	{
 		name_		 = name;
-		tf_ 		 = tf;
+		tf_listener_ = tf_listener;
 		costmap_ros_ = costmap_ros;// new costmap_2d::Costmap2DROS("local_costmap", *tf_); 
 		costmap_     = costmap_ros_->getCostmap();
 
@@ -208,8 +208,8 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
    
     //Transform the global plan to our frame
     ros::Time now = ros::Time::now();
-    tf_->waitForTransform("/map", "/base_link", now, ros::Duration(2.0));
-    if (!base_local_planner::transformGlobalPlan(*tf_, global_plan_, global_pose_tf, *costmap_, global_frame_, transformed_plan_)) 
+    tf_listener_->waitForTransform("/map", "/base_link", now, ros::Duration(2.0));
+    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf, *costmap_, global_frame_, transformed_plan_)) 
     {
       	ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
       	return false;
@@ -316,7 +316,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Aim at the path 20 points ahead
-			    		state_target_pose_ = getAimAtPathPose(global_pose_.pose, transformed_plan_, 40);
+			    		state_target_pose_ = getAimAtPathPose(global_pose_, transformed_plan_, 40);
 			    		
 			    		// Get the direction of the path 20 points ahead
 			    		//state_target_pose_ = getPathDirectionPose(global_pose_.pose, transformed_plan_, 20);
@@ -360,7 +360,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    		state_start_pose_ 	= global_pose_.pose;
 
 			    		// Get the align pose
-			    		state_target_pose_ = getAlignPose(global_pose_.pose, transformed_plan_, 40, 40, 
+			    		state_target_pose_ = getAlignPose(global_pose_, transformed_plan_, 40, 40, 
 			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
 			    											);
 			    	}
@@ -403,7 +403,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			    	{
 			    		// Store start strafe position
 			    		state_start_pose_ 	= global_pose_.pose;
-			    		state_target_pose_	= transformed_plan_.at(getClosestWaypointIndex(global_pose_.pose, transformed_plan_, 50)).pose; //! @todo magic number
+			    		state_target_pose_	= transformed_plan_.at(getClosestWaypointIndex(global_pose_, transformed_plan_, 50)).pose; //! @todo magic number
 		    		}
 			    	limitMaximalStrafeDistance(state_target_pose_);
 
@@ -607,7 +607,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				// Set path distance
 				//! @todo OH [ERROR]: trajectory is NOT IN MAP FRAME!!!! Does not work
-				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back().pose, plan);
+				int path_index = getClosestWaypointIndex(trajectory_score.trajectory.back(), plan);
 				
 				// float distance_crow    = rose_geometry::distanceXY(trajectory_score.trajectory.front().pose, trajectory_score.trajectory.back().pose);
 				float distance_to_path = rose_geometry::distanceXY(trajectory_score.trajectory.back().pose, plan.at(path_index).pose);
@@ -969,13 +969,13 @@ bool ArcLocalPlanner::trajectoryCollidesWithPoints( TrajectoryFootprint& traject
  * @param max_distance The maximum distance the robot will be translated back from the selected point.
  * @return Target pose
  */
-Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose, 
+Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose, 
 										const std::vector<PoseStamped>& plan,
 										const int& n,
 										const int& range,
 										const float& max_distance)
 {
-	Pose pose = global_pose;
+	Pose pose = global_pose.pose;
 
 	// Determine the point at the path which is closest to the robot a.t.m.
 	int closest_index 		= getClosestWaypointIndex(global_pose, plan);
@@ -1024,7 +1024,7 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	rose_geometry::rotateVect(&vx, &vy, average_orientation);
 
 	// Set the length negative to move it backward a certain amount
-	rose_geometry::setVectorLengthXY(&vx, &vy, std::fmin(rose_geometry::distanceXY(global_pose.position, pose.position), max_distance));
+	rose_geometry::setVectorLengthXY(&vx, &vy, std::fmin(rose_geometry::distanceXY(pose.position, pose.position), max_distance));
 
 	// Add the vector to the selected path point
 	pose.position.x += vx;
@@ -1036,11 +1036,11 @@ Pose ArcLocalPlanner::getAlignPose(		const Pose& global_pose,
 	return pose;
 }
 
-Pose ArcLocalPlanner::getPathDirectionPose(		const Pose& global_pose, 
+Pose ArcLocalPlanner::getPathDirectionPose(		const PoseStamped& global_pose, 
 												const std::vector<PoseStamped>& plan,
 												const int& n)
 {
-	Pose pose = global_pose;
+	Pose pose = global_pose.pose;
 
 	// Determine direction of path
 	int closest_index 		= getClosestWaypointIndex(global_pose, plan);
@@ -1059,7 +1059,7 @@ Pose ArcLocalPlanner::getPathDirectionPose(		const Pose& global_pose,
 	return pose;
 }
 
-Pose ArcLocalPlanner::getAimAtPathPose(			const Pose& global_pose, 
+Pose ArcLocalPlanner::getAimAtPathPose(			const PoseStamped& global_pose, 
 												const std::vector<PoseStamped>& plan,
 												const int& n)
 {
@@ -1073,7 +1073,7 @@ Pose ArcLocalPlanner::getAimAtPathPose(			const Pose& global_pose,
 		int upper_index 	= min(closest_index + n, (int)plan.size() - 1);
 		pose.position 		= plan.at(upper_index).pose.position;
 		drawPoint(plan.at(upper_index).pose.position.x, plan.at(upper_index).pose.position.y, 1, "map", 0.0, 0.0, 1.0);
-		pose.orientation 	= rose_conversions::RPYToQuaterion(0.0, 0.0, rose_geometry::getAngle(global_pose.position, plan.at(upper_index).pose.position) );
+		pose.orientation 	= rose_conversions::RPYToQuaterion(0.0, 0.0, rose_geometry::getAngle(global_pose.pose.position, plan.at(upper_index).pose.position) );
 	}
 	else
 	{
@@ -1568,7 +1568,7 @@ vector<rose_geometry::Point> ArcLocalPlanner::createBoundingPolygon(	const rose_
 	return bounding_polygon;
 }
 
-unsigned int ArcLocalPlanner::getClosestWaypointIndex(	const Pose& global_pose, 
+unsigned int ArcLocalPlanner::getClosestWaypointIndex(	const PoseStamped& global_pose, 
 														const vector<PoseStamped>& plan,
 														unsigned int n)
 {
@@ -1577,7 +1577,7 @@ unsigned int ArcLocalPlanner::getClosestWaypointIndex(	const Pose& global_pose,
 	return index;
 }
 
-rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const Pose& global_pose, 
+rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const PoseStamped& global_pose, 
 															const vector<PoseStamped>& plan,
 															unsigned int n)
 {
@@ -1585,17 +1585,33 @@ rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const Pose& global_pos
 	return getClosestWaypoint(global_pose, plan, index, n);
 }
 
-rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const Pose& global_pose, 
+rose_geometry::Point ArcLocalPlanner::getClosestWaypoint(	const PoseStamped& global_pose, 
 							  								const vector<PoseStamped>& plan,
 							  								unsigned int& index,
 							  								unsigned int n)
 {
+	if(plan.empty())
+	{
+		ROS_ERROR("Could not find closest point on path because the provided path is empty.");
+		return rose_geometry::Point();
+	}
+
+
+
+	// Transform pose to frame of the provided plan
+	PoseStamped transformed_pose = global_pose;
+	if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, transformed_pose) )  
+	{
+	    ROS_ERROR_NAMED(ROS_NAME, "Error transforming pose to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
+	    return rose_geometry::Point();
+	}
+
 	float min_distance = -1.0;
 	vector<PoseStamped>::const_iterator waypoint_it;
 	vector<PoseStamped>::const_iterator closest_waypoint_it = plan.begin();	
 	for(waypoint_it = plan.begin(); waypoint_it != plan.end(); ++waypoint_it)
 	{
-	  	float distance = rose_geometry::distanceXY((*waypoint_it).pose, global_pose);
+	  	float distance = rose_geometry::distanceXY((*waypoint_it).pose, transformed_pose.pose);
 	  	//ROS_DEBUG_NAMED(ROS_NAME, "Pruning: index: %lu, distance: %.3f, min_distance: %.3f", waypoint_it - plan.begin(), distance, min_distance);
     	if(distance < min_distance || min_distance == -1.0)
     	{

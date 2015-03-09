@@ -107,10 +107,10 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
 {
   public:
     ArcLocalPlanner();
-    ArcLocalPlanner(string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros);
+    ArcLocalPlanner(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros);
     ~ArcLocalPlanner();
 
-    void initialize(string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros);
+    void initialize(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros);
     bool setPlan(const vector<PoseStamped>& plan);
     bool computeVelocityCommands(Twist& cmd_vel);
     bool isGoalReached();
@@ -121,18 +121,18 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     bool    isInitialized();
     void    publishPolygon(vector<rose_geometry::Point> transformed_footprint, string name);
 
-    unsigned int    getClosestWaypointIndex(    const Pose& global_pose, 
+    unsigned int    getClosestWaypointIndex(    const PoseStamped& global_pose, 
                                                 const vector<PoseStamped>& plan,
                                                 unsigned int n = 0);
 
-    rose_geometry::Point getClosestWaypoint(   const Pose& global_pose, 
-                                const vector<PoseStamped>& plan,
-                                unsigned int n = 0);
+    rose_geometry::Point getClosestWaypoint(    const PoseStamped& global_pose, 
+                                                const vector<PoseStamped>& plan,
+                                                unsigned int n = 0);
 
-    rose_geometry::Point getClosestWaypoint(   const Pose& global_pose, 
-                                const vector<PoseStamped>& plan,
-                                unsigned int& index, 
-                                unsigned int n = 0); 
+    rose_geometry::Point getClosestWaypoint(    const PoseStamped& global_pose, 
+                                                const vector<PoseStamped>& plan,
+                                                unsigned int& index, 
+                                                unsigned int n = 0); 
 
     vector<PoseStamped>  generateLocalPlan(const Pose& global_pose, Arc& arc);
     
@@ -159,16 +159,16 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     vector<rose_geometry::Point> createBoundingPolygon(   const rose_geometry::Point center,
                                                                     const vector<rose_geometry::Point> polygon,
                                                                     float margin);
-    Pose    getAlignPose(           const Pose& global_pose, 
+    Pose    getAlignPose(           const PoseStamped& global_pose, 
                                     const std::vector<PoseStamped>& plan,
                                     const int& n,
                                     const int& range,
                                     const float& max_distance);
 
-    Pose    getPathDirectionPose(   const Pose& global_pose, 
+    Pose    getPathDirectionPose(   const PoseStamped& global_pose, 
                                     const std::vector<PoseStamped>& plan,
                                     const int& n);
-    Pose    getAimAtPathPose(       const Pose& global_pose, 
+    Pose    getAimAtPathPose(       const PoseStamped& global_pose, 
                                     const std::vector<PoseStamped>& plan,
                                     const int& n);
 
@@ -197,7 +197,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     ros::NodeHandle   pn_;
 
 
-    tf::TransformListener*       tf_;    
+    tf::TransformListener*       tf_listener_;    
     costmap_2d::Costmap2DROS*    costmap_ros_;
     costmap_2d::Costmap2D*       costmap_;
     ArcLocalPlannerCostmapModel* world_model_;   ///< @brief The world model that the controller uses for collision detection
