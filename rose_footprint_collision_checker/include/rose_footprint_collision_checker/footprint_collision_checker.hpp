@@ -50,9 +50,11 @@ using namespace ClipperLib;
 typedef rose_geometry::Point                    Vertex;
 typedef rose_geometry::Stamped<Vertex>          StampedVertex;
 typedef std::vector<Vertex>                     Vertices;
-typedef std::vector<StampedVertex>              StampedVertices;
-typedef std::vector<Vertex>                     Polygon;
+typedef Vertices                                Polygon;
 typedef std::vector<Polygon>                    Polygons;
+typedef std::vector<StampedVertex>              StampedVertices;
+typedef StampedVertices                         StampedPolygon;
+typedef std::vector<StampedPolygon>             StampedPolygons;
 typedef std::vector<geometry_msgs::PoseStamped> Trajectory;
 
 struct Timing
@@ -94,12 +96,12 @@ class FootprintCollisionChecker
     typedef std::vector<rose_geometry::Point> polygon;
     typedef std::vector<polygon> polygons;
 
-    Polygon     getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
-    Polygon     unionPolygons(const Polygons& polygons);
-    Path        polygonToPath(const Polygon& polygon);
-    Paths       polygonsToPaths(const Polygons& polygons);
-    Polygon     pathToPolygon(const Path& path);
-    Polygons    pathsToPolygons(const Paths& paths);
+    Polygon         getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Polygon         unionPolygons(const Polygons& polygons);
+    Path            polygonToPath(const Polygon& polygon);
+    Paths           polygonsToPaths(const Polygons& polygons);
+    Polygon         pathToPolygon(const Path& path);
+    Polygons        pathsToPolygons(const Paths& paths);
 
     void getTrajectoryDistance(const Trajectory& trajectory, float& euclidean_distance, float& rotation);
     void getPoseDistance(const geometry_msgs::PoseStamped& pose_a, const geometry_msgs::PoseStamped& pose_b, float& euclidean_distance, float& rotation);
