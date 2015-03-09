@@ -571,12 +571,12 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	float current_radius  = currentRadius();
 
 	int num_tang_velocities 		= 7;
-	int num_rot_velocities 			= 10;
-	int num_dts 					= 3;
+	int num_rot_velocities 			= 12;
+	int num_dts 					= 4;
 
 	float stepsize_tang_velocities  = 0.05;
-	float stepsize_rot_velocities  	= 0.09;
-	float stepsize_dts  			= 0.5;
+	float stepsize_rot_velocities  	= 0.06;
+	float stepsize_dts  			= 0.4;
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
 		float tangential_velocity = fmin( fmax( MIN_VEL_ABS
