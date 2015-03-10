@@ -136,7 +136,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 
     // Calculate and publish complete swept polygon
     Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
-    publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
+    // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
 
     if(collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
     {
