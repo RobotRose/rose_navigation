@@ -76,6 +76,9 @@ class FootprintCollisionChecker
     bool    setMaxDistance(float max_distance);
     bool    setMaxForwardSimTime(float max_forward_sim_time);
 
+    void    showCollisions();
+    void    hideCollisions();
+
   protected:
     StampedVertices             lethal_points_;
     StampedVertices             transformed_lethal_points_;
@@ -97,13 +100,12 @@ class FootprintCollisionChecker
 
     void getTrajectoryDistance(const Trajectory& trajectory, float& euclidean_distance, float& rotation);
     void getPoseDistance(const geometry_msgs::PoseStamped& pose_a, const geometry_msgs::PoseStamped& pose_b, float& euclidean_distance, float& rotation);
-
+    Polygon createAABB(const Polygon& polygon, float margin);
+    bool inAABB(const Vertex& point, const Polygon& aabb);
+    
     void drawPose(ros::NodeHandle& n, const geometry_msgs::PoseStamped& stamped_pose, int id, float r, float g, float b);
     void publishPolygon(polygon transformed_footprint, std::string frame, std::string name);
     void drawPoint(const StampedVertex& stamped_point, int id, float r, float g, float b);
-
-    Polygon createAABB(const Polygon& polygon, float margin);
-    bool inAABB(const Vertex& point, const Polygon& aabb);
 
     ros::NodeHandle             n_;
     tf::TransformListener       tf_listener_;
@@ -111,6 +113,8 @@ class FootprintCollisionChecker
     std::map<std::string, ros::Publisher> footprint_pubs_;
 
     std::mutex                  points_mutex_;
+
+    bool    show_collissions_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 

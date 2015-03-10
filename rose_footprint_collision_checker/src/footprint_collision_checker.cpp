@@ -19,6 +19,7 @@ using namespace ClipperLib;
 FootprintCollisionChecker::FootprintCollisionChecker()
     : max_distance_(3.0)
     , max_forward_sim_time_(5.0)
+    , show_collissions_(false)
 {
     rviz_marker_pub_ = n_.advertise<visualization_msgs::Marker>( "footprint_collision_checker_debug", 0 );
 }
@@ -220,7 +221,8 @@ bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedV
     Polygon aabb = createAABB(polygon, 0.001);
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
-        // drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
+        if(show_collissions_)
+            drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
 
         if(inAABB(stamped_lethal_point.data, aabb))
             if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
@@ -438,6 +440,16 @@ bool FootprintCollisionChecker::setMaxForwardSimTime(float max_forward_sim_time)
 {
     max_forward_sim_time_ = max_forward_sim_time;
     return true;
+}
+
+void FootprintCollisionChecker::showCollisions()
+{
+    show_collissions_ = true;
+}
+
+void FootprintCollisionChecker::hideCollisions()
+{
+    show_collissions_ = false;
 }
 
 // --- debug ---
