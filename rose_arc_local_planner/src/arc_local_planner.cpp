@@ -11,6 +11,7 @@ namespace rose_navigation{
 #define MAX_VEL_THETA_INPLACE	0.4
 
 #define MIN_VEL_ABS 			0.075
+#define MIN_VEL_ABS_DRIVE 		0.1
 #define MIN_VEL_THETA 			0.05
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
@@ -579,7 +580,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 4;
+	int num_tang_velocities 		= 5;
 	int num_rot_velocities 			= 18;
 	int num_dts 					= 4;
 
@@ -590,7 +591,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	timing_b_.start();
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = fmin( fmax( MIN_VEL_ABS
+		float tangential_velocity = fmin( fmax( MIN_VEL_ABS_DRIVE
 										  	  , local_vel_.linear.x - num_tang_velocities*stepsize_tang_velocities/2.0 + i*stepsize_tang_velocities)
 										, MAX_VEL_ABS);
 
@@ -612,7 +613,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.5 , 3.5);
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0 , 3.5);
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
