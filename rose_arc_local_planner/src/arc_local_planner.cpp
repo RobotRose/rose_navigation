@@ -45,10 +45,6 @@ ArcLocalPlanner::ArcLocalPlanner()
 	, odom_helper_("odom")
 	, state_(DRIVE)
 	, prev_state_(DRIVE)
-	, timing_a_("ALP timing Complete", 10)
-	, timing_b_("ALP timing 'create samples'", 10)
-	, timing_c_("ALP timing 'lethal points'", 10)
-	, timing_d_("ALP timing 'collision check'", 10)
 {}
 
 ArcLocalPlanner::ArcLocalPlanner(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros)
@@ -57,10 +53,6 @@ ArcLocalPlanner::ArcLocalPlanner(string name, tf::TransformListener* tf_listener
 	, odom_helper_("odom")  
 	, state_(DRIVE)
 	, prev_state_(DRIVE)
-	, timing_a_("ALP timing Complete", 10)
-	, timing_b_("ALP timing 'create samples'", 10)
-	, timing_c_("ALP timing 'lethal points'", 10)
-	, timing_d_("ALP timing 'collision check'", 10)
 {
 	initialize(name, tf_listener, costmap_ros);
 }
@@ -230,7 +222,6 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 
    	if(transformed_plan_.size() >= 1)
    	{
-   		timing_a_.start();
 	    rose_geometry::Point robot_pos	= global_pose_.pose.position;
 	    Pose first_path_pose			= transformed_plan_.front().pose;
 	    Pose final_path_pose			= transformed_plan_.back().pose;
@@ -486,9 +477,6 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 			state_ 		= new_state;
 
 		} while(!found_valid_cmd_vel_);
-
-		timing_a_.stop();
-    	timing_a_.show();
 	}
 	else
 	{
@@ -588,7 +576,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	float stepsize_rot_velocities  	= 0.04;
 	float stepsize_dts  			= 0.3;
 
-	timing_b_.start();
 	for(int i = 1; i < num_tang_velocities; i++)
 	{
 		float tangential_velocity = fmin( fmax( MIN_VEL_ABS_DRIVE
@@ -660,11 +647,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 			}
 		}
 	}
-	timing_b_.stop();
-	timing_b_.show();
 	base_local_planner::publishPlan(simulation_plan, simulation_plan_pub_);	
 
-	timing_c_.start();
 	// ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
 	
 	//! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
@@ -710,15 +694,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	// ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
 	FCC_.addPoints(stamped_lethal_points);
-	timing_c_.stop();
-	timing_c_.show();
 
 	// ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for colissions.", (unsigned int)trajectories.size());
 
 	// Normalize
 	//! @todo OH[IMPR]: Add cost of being close to walls
-
-	timing_d_.start();
 	for(auto& trajectory_score : trajectories)
 	{ 
 		if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
@@ -746,9 +726,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 			collission_fails++;
 	}
 
-	timing_d_.stop();
-	timing_d_.show();
-	
 	// ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
 
 	TrajectoryScore best_trajectory;

@@ -103,75 +103,6 @@ struct TrajectoryScore
     float       cost;
 };
 
-
-class Timing
-{
-public:
-    Timing(const std::string name, const int& average_over)
-        : name_(name)
-        , average_over_(average_over)
-    {}
-
-    ~Timing()
-    {}
-
-    void show(const float& rate = 0.0)
-    {
-        purge();
-
-        if( start_times.size() != finish_times.size())
-        {
-            ROS_ERROR("Timing '%s': The number of start times is not equal to the number of stop times.", name_.c_str());
-        }
-
-        float sum = 0;
-        int samples = start_times.size();
-        for(int i = 0; i < samples; i++)
-        {
-            sum += finish_times.at(i).toSec() - start_times.at(i).toSec();
-        }
-
-        sum /= (float)samples;
-
-
-        if(rate != 0.0)
-            ROS_INFO_THROTTLE(rate, "Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
-        else
-            ROS_INFO("Timing '%s', timing over %d samples, average: %.6f", name_.c_str(), samples, sum);
-    }
-
-    void start()
-    {
-        start_times.push_back(ros::Time::now());
-    }
-
-    void stop()
-    {
-        finish_times.push_back(ros::Time::now());
-    }
-
-    void reset()
-    {
-        start_times.clear();
-        finish_times.clear();
-    }
-
-private:
-    std::string name_;
-    int average_over_;
-    std::vector<ros::Time> start_times;
-    std::vector<ros::Time> finish_times;
-
-    void purge()
-    {
-        if(start_times.size() > average_over_)
-            start_times.erase(start_times.begin(), std::next(start_times.begin(), start_times.size() - average_over_ - 1 ));
-
-        if(finish_times.size() > average_over_)
-            finish_times.erase(finish_times.begin(), std::next(finish_times.begin(), finish_times.size() - average_over_ - 1 ));
-    }
-};
-
 class ArcLocalPlanner : public nav_core::BaseLocalPlanner
 {
   public:
@@ -332,11 +263,6 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     TwistMAF cmd_vel_maf_; 
 
     FootprintCollisionChecker FCC_;
-
-    Timing timing_a_;
-    Timing timing_b_;
-    Timing timing_c_;
-    Timing timing_d_;
 };
 };
 
