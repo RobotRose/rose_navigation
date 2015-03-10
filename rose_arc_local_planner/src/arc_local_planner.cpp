@@ -12,7 +12,7 @@ namespace rose_navigation{
 
 #define MIN_VEL_ABS 			0.125
 #define MIN_VEL_ABS_DRIVE 		0.125
-#define MIN_VEL_THETA 			0.05
+#define MIN_VEL_THETA 			0.75
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
 #define MAX_ACC_Y 				0.4
@@ -26,7 +26,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
 #define AT_GOAL_ANGLE 			0.10
-#define CMD_VEL_MAF_WINDOW 		1	
+#define CMD_VEL_MAF_WINDOW 		2	
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
@@ -196,7 +196,6 @@ bool ArcLocalPlanner::updateRobotState()
     local_vel_.linear.x  = local_vel_tf.getOrigin().getX();
     local_vel_.linear.y  = local_vel_tf.getOrigin().getY();
     local_vel_.angular.z = tf::getYaw(local_vel_tf.getRotation());
-    ROS_INFO("vel [%2.2f, %2.2f, %2.2f]", local_vel_.linear.x, local_vel_.linear.y, local_vel_.angular.z);
 
     return true;
 }
@@ -569,18 +568,18 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 4;
+	int num_tang_velocities 		= 3;
 	int num_rot_velocities 			= 16;
 	int num_dts 					= 3;
 
-	float stepsize_tang_velocities  = 0.05;
-	float stepsize_rot_velocities  	= 0.05;
+	float stepsize_tang_velocities  = 0.03;
+	float stepsize_rot_velocities  	= 0.075;
 	float stepsize_dts  			= 0.3;
 
 	for(int i = 0; i < num_tang_velocities; i++)
 	{
 		float tangential_velocity = local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities + ((float)i)*stepsize_tang_velocities;
-		ROS_INFO("local_vel_.linear.x : %.2f | tangential_velocity: %.2f", local_vel_.linear.x , tangential_velocity);
+
 		// Comply to minimal/maximal velocity
 		if(tangential_velocity < 0)
 				tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
@@ -591,8 +590,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 											  	  , tangential_velocity)
 										, MAX_VEL_ABS);			
 
-		//For now do not allow backward velocities
-		if(tangential_velocity < 0)
+		//For now do not allow stopped or backward velocities
+		if(tangential_velocity <= 0)
 			continue;
 		
 		for(int j = 0; j < num_rot_velocities; j++)

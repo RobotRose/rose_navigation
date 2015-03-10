@@ -7,7 +7,7 @@ cost_function_weights:
     distance: 1.5
 
     # Distance from global path cost
-    clearance: 0.10
+    clearance: 0.60
 
     # Arc difference cost
-    difference: -0.75
+    difference: -0.50
