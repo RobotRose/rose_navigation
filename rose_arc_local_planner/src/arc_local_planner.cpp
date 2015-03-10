@@ -196,6 +196,7 @@ bool ArcLocalPlanner::updateRobotState()
     local_vel_.linear.x  = local_vel_tf.getOrigin().getX();
     local_vel_.linear.y  = local_vel_tf.getOrigin().getY();
     local_vel_.angular.z = tf::getYaw(local_vel_tf.getRotation());
+    ROS_INFO("vel [%2.2f, %2.2f, %2.2f]", local_vel_.linear.x, local_vel_.linear.y, local_vel_.angular.z);
 
     return true;
 }
