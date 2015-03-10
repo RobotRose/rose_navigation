@@ -1043,20 +1043,19 @@ Pose ArcLocalPlanner::getAimAtPathPose(			const PoseStamped& global_pose,
 	Pose pose;
 
 	// Determine direction of path
-	int closest_index = getClosestWaypointIndex(global_pose, plan);	
-	
+	int closest_index 	= getClosestWaypointIndex(global_pose, plan);	
 	int upper_index 	= min(closest_index + n, (int)plan.size() - 1);
-	if(closest_index  < plan.size() - 1 and rose_geometry::distanceXY(plan.at(upper_index).pose, global_pose.pose) > inscribed_radius_)
+	if( plan.empty() or closest_index == plan.size() - 1 or rose_geometry::distanceXY(plan.at(upper_index).pose, global_pose.pose) < inscribed_radius_ ) 
+	{
+		// At or close enough to, last point. Orientate to final orientation
+		pose = plan.back().pose;
+	}
+	else
 	{
 		pose.position 		= plan.at(upper_index).pose.position;
 		drawPoint(plan.at(upper_index).pose.position.x, plan.at(upper_index).pose.position.y, 1, "map", 0.0, 0.0, 1.0);
 		pose.orientation 	= rose_conversions::RPYToQuaterion(0.0, 0.0, rose_geometry::getAngle(global_pose.pose.position, plan.at(upper_index).pose.position) );
 	}
-	else
-	{
-		// At or close enough to, last point. Orientate to final orientation
-		pose = plan.back().pose;
-	}	
 
 	return pose;
 }
