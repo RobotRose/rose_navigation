@@ -10,7 +10,7 @@ namespace rose_navigation{
 #define MAX_VEL_THETA 			0.3
 #define MAX_VEL_THETA_INPLACE	0.4
 
-#define MIN_VEL_ABS 			0.075
+#define MIN_VEL_ABS 			0.125
 #define MIN_VEL_ABS_DRIVE 		0.15
 #define MIN_VEL_THETA 			0.05
 #define MIN_VEL_THETA_INPLACE 	0.15
@@ -568,17 +568,17 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 5;
+	int num_tang_velocities 		= 4;
 	int num_rot_velocities 			= 16;
-	int num_dts 					= 2;
+	int num_dts 					= 3;
 
 	float stepsize_tang_velocities  = 0.05;
-	float stepsize_rot_velocities  	= 0.04;
+	float stepsize_rot_velocities  	= 0.05;
 	float stepsize_dts  			= 0.3;
 
 	for(int i = 0; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = local_vel_.linear.x - ((float)num_tang_velocities/2.0)*stepsize_tang_velocities + i*stepsize_tang_velocities;
+		float tangential_velocity = local_vel_.linear.x - ((float)num_tang_velocities/2.0)*stepsize_tang_velocities + ((float)i)*stepsize_tang_velocities;
 		
 		// Comply to minimal/maximal velocity
 		if(tangential_velocity < 0)
@@ -590,17 +590,20 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 											  	  , tangential_velocity)
 										, MAX_VEL_ABS);			
 
+		//For now do not allow backward velocities
+		if(tangential_velocity < 0)
+			continue;
 		
 		for(int j = 0; j < num_rot_velocities; j++)
 		{
-			float rotational_velocity = local_vel_.angular.z - ( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + j*stepsize_rot_velocities;
+			float rotational_velocity = local_vel_.angular.z - ( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + ((float)j)*stepsize_rot_velocities;
 
 			// if(fabs(rotational_velocity) < MIN_VEL_THETA)
 			// 	continue;
 
 			for(int k = 1; k < num_dts; k++)
 			{
-				float forward_t = k*stepsize_dts;
+				float forward_t = ((float)k)*stepsize_dts;
 
 				Twist velocity;
 				velocity.linear.x 	= tangential_velocity;
@@ -624,7 +627,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 				float end_point_distance_to_path = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
 				float robot_distance_to_path 	 = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
 
-		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path)
+				//! @todo OH [CONF]: 1.5 is a factor that does discard paths that do not gain enough.
+		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.5)
 		    	{
 		    		distance_fails++;
 		    		continue;
