@@ -579,7 +579,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	for(int i = 0; i < num_tang_velocities; i++)
 	{
 		float tangential_velocity = local_vel_.linear.x - ((float)num_tang_velocities/2.0)*stepsize_tang_velocities + ((float)i)*stepsize_tang_velocities;
-		
+		ROS_INFO("local_vel_.linear.x : %.2 | tangential_velocity: %.2f", local_vel_.linear.x , tangential_velocity);
 		// Comply to minimal/maximal velocity
 		if(tangential_velocity < 0)
 				tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
@@ -654,7 +654,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	}
 	base_local_planner::publishPlan(simulation_plan, simulation_plan_pub_);	
 
-	// ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
+	ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
 	
 	//! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
 	// Polygon bounding_box;
