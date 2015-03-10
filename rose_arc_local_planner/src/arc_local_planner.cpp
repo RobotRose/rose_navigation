@@ -624,14 +624,14 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 				trajectory_score.score 	= path_index;
 				trajectory_score.cost 	= 1.0/end_point_distance_to_path;
 
-				for(const auto& stamped_pose : trajectory_score.trajectory)
+				for(auto stamped_pose : trajectory_score.trajectory)
 				{
 					if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, stamped_pose) )  
 					{
 					    ROS_ERROR_NAMED(ROS_NAME, "Error transforming pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
 					    continue;
 					}
-					
+
 					minx = fmin(minx, stamped_pose.pose.position.x);
 					miny = fmin(miny, stamped_pose.pose.position.y);
 					maxx = fmax(maxx, stamped_pose.pose.position.x);
