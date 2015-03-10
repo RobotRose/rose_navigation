@@ -570,10 +570,10 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	Trajectory 						simulation_plan;
 	std::vector<TrajectoryScore> 	trajectories;
 	std::vector<TrajectoryScore> 	valid_trajectories;
-	float min_x = 1e6;
-	float min_y = 1e6;
-	float max_x = -1e6;
-	float max_y = -1e6;
+	float minx = 1e6;
+	float miny = 1e6;
+	float maxx = -1e6;
+	float maxy = -1e6;
 
 	int distance_fails  	= 0;
 	int collission_fails 	= 0;
@@ -639,10 +639,10 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				for(const auto& stamped_pose : trajectory_score.trajectory)
 				{
-					min_x = fmin(min_x, stamped_pose.pose.position.x);
-					min_y = fmin(min_y, stamped_pose.pose.position.y);
-					max_x = fmax(max_x, stamped_pose.pose.position.x);
-					max_y = fmax(max_y, stamped_pose.pose.position.y);
+					minx = fmin(minx, stamped_pose.pose.position.x);
+					miny = fmin(miny, stamped_pose.pose.position.y);
+					maxx = fmax(maxx, stamped_pose.pose.position.x);
+					maxy = fmax(maxy, stamped_pose.pose.position.y);
 				}
 				// Visualize cmd_vels		
 				PoseStamped stamped_pose;
@@ -668,13 +668,19 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	// ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
 	
 	//! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
-	max_x = 5.0;
-	max_y = 5.0;
-	min_x = -5.0;
-	min_y = -5.0;
+	Polygon bounding_box;
+	Vertex vertex;
+	vertex = Vertex(global_pose_.pose.position.x + maxx + circumscribed_radius_, global_pose_.pose.position.y + maxy + circumscribed_radius_);
+	bounding_box.push_back(vertex);
+	vertex = Vertex(global_pose_.pose.position.x + minx - circumscribed_radius_, global_pose_.pose.position.y + maxy + circumscribed_radius_);
+	bounding_box.push_back(vertex);
+	vertex = Vertex(global_pose_.pose.position.x + minx - circumscribed_radius_, global_pose_.pose.position.y + miny - circumscribed_radius_);
+	bounding_box.push_back(vertex);
+	vertex = Vertex(global_pose_.pose.position.x + maxx + circumscribed_radius_, global_pose_.pose.position.y + miny - circumscribed_radius_);
+	bounding_box.push_back(vertex);
 
 	// Create polygon surrounding the circumscribed radius of the robot
-	vector<rose_geometry::Point> check_area_polygon = createBoundingPolygon(global_pose_.pose.position, transformed_footprint_, circumscribed_radius_ * 1.5);
+	Polygon check_area_polygon = bounding_box;//createBoundingPolygon(global_pose_.pose.position, bounding_box, circumscribed_radius_);
 
 	publishPolygon(check_area_polygon, "check_area_polygon");
 
