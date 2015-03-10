@@ -660,13 +660,13 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	//! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
 	Polygon bounding_box;
 	Vertex vertex;
-	vertex = Vertex(global_pose_.pose.position.x + maxx + circumscribed_radius_, global_pose_.pose.position.y + maxy + circumscribed_radius_);
+	vertex = Vertex(maxx + circumscribed_radius_, maxy + circumscribed_radius_);
 	bounding_box.push_back(vertex);
-	vertex = Vertex(global_pose_.pose.position.x + minx - circumscribed_radius_, global_pose_.pose.position.y + maxy + circumscribed_radius_);
+	vertex = Vertex(minx - circumscribed_radius_, maxy + circumscribed_radius_);
 	bounding_box.push_back(vertex);
-	vertex = Vertex(global_pose_.pose.position.x + minx - circumscribed_radius_, global_pose_.pose.position.y + miny - circumscribed_radius_);
+	vertex = Vertex(minx - circumscribed_radius_, miny - circumscribed_radius_);
 	bounding_box.push_back(vertex);
-	vertex = Vertex(global_pose_.pose.position.x + maxx + circumscribed_radius_, global_pose_.pose.position.y + miny - circumscribed_radius_);
+	vertex = Vertex(maxx + circumscribed_radius_, miny - circumscribed_radius_);
 	bounding_box.push_back(vertex);
 
 	// Create polygon surrounding the circumscribed radius of the robot
