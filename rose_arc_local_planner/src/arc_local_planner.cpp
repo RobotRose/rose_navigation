@@ -11,7 +11,7 @@ namespace rose_navigation{
 #define MAX_VEL_THETA_INPLACE	0.4
 
 #define MIN_VEL_ABS 			0.075
-#define MIN_VEL_ABS_DRIVE 		0.2
+#define MIN_VEL_ABS_DRIVE 		0.15
 #define MIN_VEL_THETA 			0.05
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
