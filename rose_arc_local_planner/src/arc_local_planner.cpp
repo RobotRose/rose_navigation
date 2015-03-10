@@ -578,7 +578,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	for(int i = 0; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = local_vel_.linear.x - ((float)num_tang_velocities/2.0)*stepsize_tang_velocities + ((float)i)*stepsize_tang_velocities;
+		float tangential_velocity = local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities + ((float)i)*stepsize_tang_velocities;
 		ROS_INFO("local_vel_.linear.x : %.2f | tangential_velocity: %.2f", local_vel_.linear.x , tangential_velocity);
 		// Comply to minimal/maximal velocity
 		if(tangential_velocity < 0)
