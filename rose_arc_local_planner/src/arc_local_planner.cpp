@@ -7,6 +7,7 @@ namespace rose_navigation{
 #define MAX_VEL_X 				0.24
 #define MAX_VEL_Y 				0.24
 #define MAX_VEL_ABS 			sqrt(MAX_VEL_X*MAX_VEL_X + MAX_VEL_Y*MAX_VEL_Y)
+#define MAX_VEL_DRIVE			0.2	
 #define MAX_VEL_THETA 			0.3
 #define MAX_VEL_THETA_INPLACE	0.4
 
@@ -26,7 +27,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
 #define AT_GOAL_ANGLE 			0.10
-#define CMD_VEL_MAF_WINDOW 		2	
+#define CMD_VEL_MAF_WINDOW 		3	
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
@@ -568,27 +569,28 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 3;
-	int num_rot_velocities 			= 16;
-	int num_dts 					= 3;
+	int num_tang_velocities 		= 8;
+	int num_rot_velocities 			= 18;
+	int num_dts 					= 2;
 
-	float stepsize_tang_velocities  = 0.03;
-	float stepsize_rot_velocities  	= 0.075;
+	float stepsize_tang_velocities  = 0.025;
+	float stepsize_rot_velocities  	= 0.035;
 	float stepsize_dts  			= 0.3;
 
 	for(int i = 0; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities + ((float)i)*stepsize_tang_velocities;
+		// local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
+		float tangential_velocity = ((float)i)*stepsize_tang_velocities;
 
 		// Comply to minimal/maximal velocity
 		if(tangential_velocity < 0)
 				tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
 											  	  , tangential_velocity)
-										, -MAX_VEL_ABS);
+										, -MAX_VEL_DRIVE);
 		else
 				tangential_velocity = fmin( fmax(   MIN_VEL_ABS_DRIVE
 											  	  , tangential_velocity)
-										, MAX_VEL_ABS);			
+										, MAX_VEL_DRIVE);			
 
 		//For now do not allow stopped or backward velocities
 		if(tangential_velocity <= 0)
@@ -611,7 +613,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.0 , 3.5);
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.5 , 3.5); 	//! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
