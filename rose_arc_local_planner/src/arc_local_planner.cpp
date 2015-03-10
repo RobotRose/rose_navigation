@@ -1068,7 +1068,7 @@ Pose ArcLocalPlanner::getAimAtPathPose(			const PoseStamped& global_pose,
 	// Determine direction of path
 	int closest_index = getClosestWaypointIndex(global_pose, plan);	
 	
-	if(closest_index  < plan.size() - 1)
+	if(closest_index  < plan.size() - 1 and rose_geometry::distanceXY(plan.at(upper_index).pose, global_pose.pose) > inscribed_radius_)
 	{
 		int upper_index 	= min(closest_index + n, (int)plan.size() - 1);
 		pose.position 		= plan.at(upper_index).pose.position;
@@ -1077,7 +1077,7 @@ Pose ArcLocalPlanner::getAimAtPathPose(			const PoseStamped& global_pose,
 	}
 	else
 	{
-		// At last point thus orientate to final orientation
+		// At or close enough to, last point. Orientate to final orientation
 		pose = plan.back().pose;
 	}	
 
