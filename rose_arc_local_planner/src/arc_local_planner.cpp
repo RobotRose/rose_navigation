@@ -26,7 +26,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
 #define AT_GOAL_ANGLE 			0.10
-#define CMD_VEL_MAF_WINDOW 		2	
+#define CMD_VEL_MAF_WINDOW 		3	
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
@@ -576,11 +576,19 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 	float stepsize_rot_velocities  	= 0.04;
 	float stepsize_dts  			= 0.3;
 
-	for(int i = 1; i < num_tang_velocities; i++)
+	for(int i = 0; i < num_tang_velocities; i++)
 	{
-		float tangential_velocity = fmin( fmax( MIN_VEL_ABS_DRIVE
-										  	  , local_vel_.linear.x - num_tang_velocities*stepsize_tang_velocities/2.0 + i*stepsize_tang_velocities)
-										, MAX_VEL_ABS);
+		float tangential_velocity = local_vel_.linear.x - ((float)num_tang_velocities/2.0)*stepsize_tang_velocities + i*stepsize_tang_velocities;
+		
+		// Comply to minimal/maximal velocity
+		if(tangential_velocity < 0)
+				tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
+											  	  , tangential_velocity)
+										, -MAX_VEL_ABS);
+		else
+				tangential_velocity = fmin( fmax(   MIN_VEL_ABS_DRIVE
+											  	  , tangential_velocity)
+										, MAX_VEL_ABS);			
 
 		
 		for(int j = 0; j < num_rot_velocities; j++)
