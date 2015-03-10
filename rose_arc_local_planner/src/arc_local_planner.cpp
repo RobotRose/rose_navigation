@@ -10,7 +10,7 @@ namespace rose_navigation{
 #define MAX_VEL_THETA 			0.3
 #define MAX_VEL_THETA_INPLACE	0.4
 
-#define MIN_VEL_ABS 			0.175
+#define MIN_VEL_ABS 			0.075
 #define MIN_VEL_THETA 			0.05
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
@@ -367,7 +367,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 
 			    		// Get the align pose
 			    		state_target_pose_ = getAlignPose(global_pose_, transformed_plan_, 40, 20, 
-			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 0.3) 
+			    												fmin(rose_geometry::distanceXY(global_pose_.pose.position, final_path_pose.position), 1.5) 
 			    											);
 			    	}
 			    	limitMaximalStrafeDistance(state_target_pose_);
@@ -969,64 +969,51 @@ Pose ArcLocalPlanner::getAlignPose(		const PoseStamped& global_pose,
 	int closest_index 		= getClosestWaypointIndex(global_pose, plan);
 
 	// Take two points. One n points ahead, one n + 1 points ahead
-	//! @todo OH [IMPR]: Make this into a sperate function.
 	int half_range 			= ceil((float)range / 2.0);
 	int n_index 			= std::min((int)plan.size() - 1, closest_index + n);
 	int target_index_low 	= std::min((int)plan.size() - 1, closest_index + n - half_range );
 	int target_index_high 	= std::min((int)plan.size() - 1, closest_index + n + half_range );
 
 	// If this is the same point, we are at the end of the path, return the pose of the final point of the path
-	float average_orientation = 0.0;
+	float path_orientation = 0.0;
 	if(target_index_low == target_index_high)
 	{
 		pose 				= plan.back().pose;
-		average_orientation = tf::getYaw(pose.orientation);
+		path_orientation 	= tf::getYaw(pose.orientation);
 	}
 	else
 	{
 		// Select the position as the point on the path n points ahead
-		pose.position = plan.at(target_index_high).pose.position;
-
-		// average_orientation = 0.0;
-		// for(int i = target_index_low; i < target_index_high - 1; i++)
-		// {
-		// 	// Indicate range used for averaging
-		// 	drawPoint(plan.at(i).pose.position.x, plan.at(i).pose.position.y, i, "map", 1.0, 1.0, 0.0);
-			
-		// 	// Determine direction of path
-		// 	average_orientation += rose_geometry::getAngle(plan.at(i).pose, plan.at(i + 1).pose);
-		// }
+		pose.position = plan.at(n_index).pose.position;
 
 		// Indicate range
 		drawPoint(plan.at(target_index_low).pose.position.x, plan.at(target_index_low).pose.position.y, 0, "map", 1.0, 1.0, 0.0);
 		drawPoint(plan.at(target_index_high).pose.position.x, plan.at(target_index_high).pose.position.y, 1, "map", 1.0, 1.0, 0.0);
 			
 		// Determine direction of path
-		average_orientation = rose_geometry::getAngle(plan.at(target_index_low).pose, plan.at(target_index_high).pose);
-
-		// Average the oriention by dividing by the number of points
-		// average_orientation /= target_index_high - target_index_low;
-
-		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, average_orientation);
+		path_orientation = rose_geometry::getAngle(plan.at(target_index_low).pose, plan.at(target_index_high).pose);
+		pose.orientation = rose_conversions::RPYToQuaterion(0.0, 0.0, path_orientation);
 	}	
 
-	float vx = plan.at(target_index_high).pose.position.x - plan.at(target_index_low).pose.position.x;
-	float vy = plan.at(target_index_high).pose.position.y - plan.at(target_index_low).pose.position.y;
-	
+	// Find the pose that has a right angle corner with the pose of the robot. Do this by sampeling, the place at which the distance is smallest is the
+	// right angled position.
 	Pose best_pose = global_pose.pose;
 	float min_dist = 1e12;
 	for(int i = 0; i < 20; i++)
 	{
 		Pose new_pose = pose;
+
+		// Vector from far to close point
+		float vx = plan.at(target_index_high).pose.position.x - plan.at(target_index_low).pose.position.x;
+		float vy = plan.at(target_index_high).pose.position.y - plan.at(target_index_low).pose.position.y;
+
 		// Translate the point a certain distance backward
 		rose_geometry::setVectorLengthXY(&vx, &vy, max_distance/20.0 * (float)i);
-
-		// Rotate the vector to align with the selected point on the path
-		rose_geometry::rotateVect(&vx, &vy, average_orientation + 2.0*M_PI);
 
 		// Add the vector to the selected path point
 		new_pose.position.x += vx;
 		new_pose.position.y += vy;
+		drawPoint(new_pose.position.x, new_pose.position.y, (target_index_high - target_index_low + 1), "map", 0.0, 0.0, 1.0);
 
 		float dist = rose_geometry::distanceXY(new_pose, global_pose.pose);
 		if(dist <= min_dist)
