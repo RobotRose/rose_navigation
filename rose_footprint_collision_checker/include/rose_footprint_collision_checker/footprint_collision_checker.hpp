@@ -57,19 +57,11 @@ typedef StampedVertices                         StampedPolygon;
 typedef std::vector<StampedPolygon>             StampedPolygons;
 typedef std::vector<geometry_msgs::PoseStamped> Trajectory;
 
-struct Timing
-{
-    std::vector<ros::Time> start_times;
-    std::vector<ros::Time> finish_times;
-};
-
 class FootprintCollisionChecker
 {
   public:
     FootprintCollisionChecker();
     ~FootprintCollisionChecker();
-
-    void    processTiming(const std::string& name, Timing& time_struct, const int& average_over, const float& rate);
 
     bool    setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint);
     bool    addPoints(const StampedVertices& new_lethal_points);
@@ -119,11 +111,6 @@ class FootprintCollisionChecker
     std::map<std::string, ros::Publisher> footprint_pubs_;
 
     std::mutex                  points_mutex_;
-
-
-    Timing timing_add_points_;
-    Timing timing_sweep_;
-    Timing timing_collission_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 

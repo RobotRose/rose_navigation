@@ -35,7 +35,6 @@ bool FootprintCollisionChecker::setFootprint(const geometry_msgs::PoseStamped& f
 
 bool FootprintCollisionChecker::addPoints(const StampedVertices& new_lethal_points)
 {
-    timing_add_points_.start_times.push_back(ros::Time::now());
     // This lock is needed because the getFrameInFrame contains a tf_listener which has a asynchronous spinner thread, then if 
     // points are added/clear via an sensor callback method segmentation faults can/will happen.
     std::lock_guard<std::mutex> lock(points_mutex_);
@@ -47,29 +46,7 @@ bool FootprintCollisionChecker::addPoints(const StampedVertices& new_lethal_poin
     // {
     //     drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
     // }
-    timing_add_points_.finish_times.push_back(ros::Time::now());
-    processTiming("AddPoints", timing_add_points_, 10, 1.0);
     return true;
-}
-
-void FootprintCollisionChecker::processTiming(const std::string& name, Timing& time_struct, const int& average_over, const float& rate)
-{
-    float sum = 0;
-    int samples = time_struct.start_times.size();
-    for(int i = 0; i < samples; i++)
-    {
-        sum += time_struct.finish_times.at(i).toSec() - time_struct.start_times.at(i).toSec();
-    }
-
-    sum /= (float)samples;
-
-    if(samples - average_over - 1 > 0)
-    {
-        time_struct.start_times.erase(time_struct.start_times.begin(), std::next(time_struct.start_times.begin(), (samples - average_over - 1) ));
-        time_struct.finish_times.erase(time_struct.finish_times.begin(), std::next(time_struct.finish_times.begin(), (samples - average_over - 1) ));
-    }
-
-    ROS_INFO_THROTTLE_NAMED(rate, ROS_NAME, "Timing '%s', timing over %d samples, average: %.6f", name.c_str(), samples, sum);
 }
 
 bool FootprintCollisionChecker::clearPoints()
@@ -147,8 +124,6 @@ bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, c
 // Return true if a collission does occure
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
-    timing_collission_.start_times.push_back(ros::Time::now());
-    
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
@@ -162,15 +137,8 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     if(collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
     {
         ROS_DEBUG_NAMED(ROS_NAME, "Collision detected.");
-        
-        timing_collission_.finish_times.push_back(ros::Time::now());
-        processTiming("collision test for trajectory", timing_collission_, 1000, 0.2);
-
         return true;
     }
-
-    timing_collission_.finish_times.push_back(ros::Time::now());
-    processTiming("collision test for trajectory", timing_collission_, 1000, 0.2);
 
     ROS_DEBUG_NAMED(ROS_NAME, "Collision free travel for complete trajectory.");
     return false;
