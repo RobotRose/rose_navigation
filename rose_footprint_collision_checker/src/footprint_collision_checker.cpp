@@ -107,9 +107,11 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
 
             rose_geometry::translatePoint(-transformation.pose.position.x, -transformation.pose.position.y, transformed_stamped_lethal_point.data);
             rose_geometry::rotatePointAroundOrigin(transformed_stamped_lethal_point.data, -tf::getYaw(transformation.pose.orientation));
-
+            
             transformed_stamped_points.push_back(transformed_stamped_lethal_point);
         }
+        else
+            transformed_stamped_points.push_back(stamped_lethal_point);
     }
 
     return transformed_stamped_points;
