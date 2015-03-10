@@ -41,11 +41,11 @@ bool FootprintCollisionChecker::addPoints(const StampedVertices& new_lethal_poin
     lethal_points_.insert( lethal_points_.end(), new_lethal_points.begin(), new_lethal_points.end() );
     
     // DEBUG
-    // int id = 0;
-    // for(const auto& stamped_lethal_point : lethal_points_)
-    // {
-    //     drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
-    // }
+    int id = 0;
+    for(const auto& stamped_lethal_point : lethal_points_)
+    {
+        drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
+    }
     return true;
 }
 
@@ -129,18 +129,19 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
+    ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
 
     // Calculate and publish complete swept polygon
     Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
-    // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
+    publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
 
     if(collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
     {
-        ROS_DEBUG_NAMED(ROS_NAME, "Collision detected.");
+        ROS_INFO_NAMED(ROS_NAME, "Collision detected.");
         return true;
     }
 
-    ROS_DEBUG_NAMED(ROS_NAME, "Collision free travel for complete trajectory.");
+    ROS_INFO_NAMED(ROS_NAME, "Collision free travel for complete trajectory.");
     return false;
 }
 
@@ -208,20 +209,27 @@ bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
 
 bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
 {
+    ROS_INFO_NAMED(ROS_NAME, "FCC collision check.");
+    
     if(stamped_lethal_points.empty())
         return false;
 
     Path path = polygonToPath(polygon);
     int id = 0;
-    // ROS_INFO("FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
+    ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
     Polygon aabb = createAABB(polygon, 0.001);
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
-        // drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
+        drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
 
         if(inAABB(stamped_lethal_point.data, aabb))
+        {
+            ROS_INFO_NAMED(ROS_NAME, "In AABB");
             if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
                 return true;
+        }
+        else
+            ROS_INFO_NAMED(ROS_NAME, "NOT In AABB");
     }
 
     return false;
@@ -259,12 +267,12 @@ Trajectory FootprintCollisionChecker::calculatePoseTrajectory(  const geometry_m
     } while (at_t <= forward_t && at_distance <= max_distance);
 
     // Debug trajectory
-    // int id = 0;
-    // ros::NodeHandle nh("~");
-    // for(const auto& pose : trajectory)
-    // {
-    //     drawPose(nh, pose, id++, 0.0, 1.0, 0.0);
-    // }
+    int id = 0;
+    ros::NodeHandle nh("~");
+    for(const auto& pose : trajectory)
+    {
+        drawPose(nh, pose, id++, 0.0, 1.0, 0.0);
+    }
 
     return trajectory;
 }
