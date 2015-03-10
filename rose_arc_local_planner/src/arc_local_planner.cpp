@@ -194,7 +194,7 @@ bool ArcLocalPlanner::updateRobotState()
    	tf::Stamped<tf::Pose> local_vel_tf;
     odom_helper_.getRobotVel(local_vel_tf);
     local_vel_.linear.x  = local_vel_tf.getOrigin().getX();
-    local_vel_.linear.x  = local_vel_tf.getOrigin().getY();
+    local_vel_.linear.y  = local_vel_tf.getOrigin().getY();
     local_vel_.angular.z = tf::getYaw(local_vel_tf.getRotation());
 
     return true;
