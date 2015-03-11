@@ -766,11 +766,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 		
 		if(ranking >= best_ranking)
 		{
-			ROS_INFO_NAMED(ROS_NAME, " New best ranking	[%2.2f, %2.2f, %2.2f]	= %.6f", ranking, trajectory.velocity.linear.x, trajectory.velocity.linear.y, trajectory.velocity.angular.x);
-			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.4f			= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
-			ROS_INFO_NAMED(ROS_NAME, "  Distance from path cost %2.4f			= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
-			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %.2f/%2.2f/%2.2f  = %.6f", current_radius, current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
-			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking 						= %.6f", ranking);
+			ROS_INFO_NAMED(ROS_NAME, " New best ranking	[%2.2f, %2.2f, %2.2f]			= %.6f", ranking, trajectory.velocity.linear.x, trajectory.velocity.linear.y, trajectory.velocity.angular.x);
+			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.4f					= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
+			ROS_INFO_NAMED(ROS_NAME, "  Distance from path cost %2.4f					= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
+			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f/%2.2f  	= %.6f", current_radius, current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
+			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking 								= %.6f", ranking);
 			best_ranking 			= ranking;
 			best_trajectory 		= trajectory;
 		}
@@ -1247,10 +1247,10 @@ VelCalcResult ArcLocalPlanner::calculateStrafeVelocityCommand(Twist& cmd_vel)
 
 float ArcLocalPlanner::radiusFromVelocity(const Twist& velocity)
 {
-	if(local_vel_.angular.z == 0.0)
+	if(velocity.angular.z == 0.0)
 		return 10000.0; 	// Very large (as good as inf)
 	else
-		return sqrt(local_vel_.linear.x*local_vel_.linear.x + local_vel_.linear.y*local_vel_.linear.y)/local_vel_.angular.z;
+		return sqrt(velocity.linear.x*velocity.linear.x + velocity.linear.y*velocity.linear.y)/velocity.angular.z;
 }
 
 float ArcLocalPlanner::currentRadius()
