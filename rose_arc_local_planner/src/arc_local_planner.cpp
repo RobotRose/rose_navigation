@@ -12,7 +12,7 @@ namespace rose_navigation{
 #define MAX_VEL_THETA_INPLACE	0.4
 
 #define MIN_VEL_ABS 			0.125
-#define MIN_VEL_ABS_DRIVE 		0.125
+#define MIN_VEL_ABS_DRIVE 		0.10
 #define MIN_VEL_THETA 			0.75
 #define MIN_VEL_THETA_INPLACE 	0.15
 #define MAX_ACC_X 				0.4
@@ -27,7 +27,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE 		M_PI*(4.0/4.0)
 #define AT_GOAL_DIST 			0.05
 #define AT_GOAL_ANGLE 			0.10
-#define CMD_VEL_MAF_WINDOW 		3	
+#define CMD_VEL_MAF_WINDOW 		2	
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
@@ -569,13 +569,13 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 	float current_radius  = currentRadius();
 
-	int num_tang_velocities 		= 6;
-	int num_rot_velocities 			= 20;
-	int num_dts 					= 2;
+	int num_tang_velocities 		= 5;
+	int num_rot_velocities 			= 16;
+	int num_dts 					= 3;
 
-	float stepsize_tang_velocities  = 0.025;
-	float stepsize_rot_velocities  	= 0.035;
-	float stepsize_dts  			= 0.3;
+	float stepsize_tang_velocities  = 0.030;
+	float stepsize_rot_velocities  	= 0.045;
+	float stepsize_dts  			= 0.75;
 
 	for(int i = 0; i < num_tang_velocities; i++)
 	{
@@ -613,7 +613,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 				TrajectoryScore trajectory_score;
 				trajectory_score.velocity 	= velocity;
-				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(velocity, stepsize_dts, forward_t + 2.5 , 3.5); 	//! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
+				// + 0.75 + local_vel_.linear.x*(1.5/0.25)
+				trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 0.5, 3.0); 	//! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
 				// Get the end point of the trajectory in the plan frame.
 				geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
@@ -630,7 +631,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 				float robot_distance_to_path 	 = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
 
 				//! @todo OH [CONF]: 1.5 is a factor that does discard paths that do not gain enough.
-		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.5)
+		    	if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.25)
 		    	{
 		    		distance_fails++;
 		    		continue;
@@ -753,8 +754,9 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 		if(max_radius_diff - min_radius_diff != 0.0)
 			normalized_arc_radius_diff 	= fabs(current_radius_difference - min_radius_diff)/fabs(max_radius_diff - min_radius_diff);
 
-		float ranking = (distance_weight_*normalized_dist_score) + (clearance_weight_*normalized_cost);
-
+		float ranking = 0.0;
+		ranking += distance_weight_*normalized_dist_score;
+		ranking += clearance_weight_*normalized_cost;
 		ranking += difference_weight_*normalized_arc_radius_diff;
 	
 		ROS_DEBUG_NAMED(ROS_NAME, "Normalized distance score       		  = %.6f", distance_weight_*normalized_dist_score);
@@ -764,11 +766,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 		
 		if(ranking >= best_ranking)
 		{
-			ROS_DEBUG_NAMED(ROS_NAME, " New best ranking							= %.6f", ranking);
-			ROS_DEBUG_NAMED(ROS_NAME, "  Normalized distance score %2.4f			= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
-			ROS_DEBUG_NAMED(ROS_NAME, "  Distance from path cost %2.4f			= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
-			ROS_DEBUG_NAMED(ROS_NAME, "  normalized_arc_radius_diff %2.2f/%2.2f 	= %.6f", current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
-			ROS_DEBUG_NAMED(ROS_NAME, "  Resulting ranking 						= %.6f", ranking);
+			ROS_INFO_NAMED(ROS_NAME, " New best ranking	[%2.2f, %2.2f, %2.2f]	= %.6f", ranking, trajectory.velocity.linear.x, trajectory.velocity.linear.y, trajectory.velocity.angular.x);
+			ROS_INFO_NAMED(ROS_NAME, "  Normalized distance score %2.4f			= %.6f", trajectory.score, distance_weight_*normalized_dist_score);
+			ROS_INFO_NAMED(ROS_NAME, "  Distance from path cost %2.4f			= %.6f", trajectory.cost, clearance_weight_*normalized_cost);
+			ROS_INFO_NAMED(ROS_NAME, "  normalized_arc_radius_diff %.2f/%2.2f/%2.2f  = %.6f", current_radius, current_radius_difference, fabs(max_radius_diff - min_radius_diff), difference_weight_*normalized_arc_radius_diff);
+			ROS_INFO_NAMED(ROS_NAME, "  Resulting ranking 						= %.6f", ranking);
 			best_ranking 			= ranking;
 			best_trajectory 		= trajectory;
 		}
@@ -1071,6 +1073,9 @@ Pose ArcLocalPlanner::getAimAtPathPose(			const PoseStamped& global_pose,
 VelCalcResult ArcLocalPlanner::calculateDriveVelocityCommand(Twist& cmd_vel)
 {
 	Twist best_vel;
+	if( rose_geometry::distanceXY(transformed_plan_.back().pose, global_pose_.pose) < 0.75*inscribed_radius_ ) 	//! @todo OH [CONF]: 0.5?
+		return FAILED;
+
 	if( not findBestCommandVelocity(transformed_plan_, best_vel))
 	{
 		// Forget the where the search of arc's was
@@ -1079,7 +1084,7 @@ VelCalcResult ArcLocalPlanner::calculateDriveVelocityCommand(Twist& cmd_vel)
 		return FAILED; 
 	}
 
-	ROS_INFO_NAMED(ROS_NAME, "Best velocity found: [%.2f, %.2f | %.2f]", best_vel.linear.x, best_vel.linear.y, best_vel.angular.z);
+	ROS_INFO_NAMED(ROS_NAME, "Best drive velocity found: [%.2f, %.2f | %.2f]", best_vel.linear.x, best_vel.linear.y, best_vel.angular.z);
 
 	// rose_conversions::limit(-MAX_VEL_ABS, MAX_VEL_ABS, &velocity);
 
