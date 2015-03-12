@@ -70,6 +70,7 @@
 #include "rose_twist_moving_average_filter/twist_maf.hpp"
 
 #include "server_multiple_client/server_multiple_client.hpp"
+#include "rose_footprint_collision_checker/footprint_collision_checker.hpp"
 
 using std::string;
 using std::vector;
@@ -94,14 +95,22 @@ enum VelCalcResult
     FAILED, BUSY, FINISHED
 };
 
+struct TrajectoryScore
+{
+    Twist       velocity;
+    Trajectory  trajectory;
+    float       score;
+    float       cost;
+};
+
 class ArcLocalPlanner : public nav_core::BaseLocalPlanner
 {
   public:
     ArcLocalPlanner();
-    ArcLocalPlanner(string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros);
+    ArcLocalPlanner(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros);
     ~ArcLocalPlanner();
 
-    void initialize(string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros);
+    void initialize(string name, tf::TransformListener* tf_listener, costmap_2d::Costmap2DROS* costmap_ros);
     bool setPlan(const vector<PoseStamped>& plan);
     bool computeVelocityCommands(Twist& cmd_vel);
     bool isGoalReached();
@@ -110,20 +119,21 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     void    loadParameters();
     void    CB_alarm_changed(const bool& new_alarm_value);
     bool    isInitialized();
+    bool    updateRobotState();
     void    publishPolygon(vector<rose_geometry::Point> transformed_footprint, string name);
 
-    unsigned int    getClosestWaypointIndex(    const Pose& global_pose, 
+    unsigned int    getClosestWaypointIndex(    const PoseStamped& global_pose, 
                                                 const vector<PoseStamped>& plan,
                                                 unsigned int n = 0);
 
-    rose_geometry::Point getClosestWaypoint(   const Pose& global_pose, 
-                                const vector<PoseStamped>& plan,
-                                unsigned int n = 0);
+    rose_geometry::Point getClosestWaypoint(    const PoseStamped& global_pose, 
+                                                const vector<PoseStamped>& plan,
+                                                unsigned int n = 0);
 
-    rose_geometry::Point getClosestWaypoint(   const Pose& global_pose, 
-                                const vector<PoseStamped>& plan,
-                                unsigned int& index, 
-                                unsigned int n = 0); 
+    rose_geometry::Point getClosestWaypoint(    const PoseStamped& global_pose, 
+                                                const vector<PoseStamped>& plan,
+                                                unsigned int& index, 
+                                                unsigned int n = 0); 
 
     vector<PoseStamped>  generateLocalPlan(const Pose& global_pose, Arc& arc);
     
@@ -133,14 +143,14 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     void    drawPoint(float x, float y, int id, string frame_id, float r, float g, float b);
     void    drawCircle(float x, float y, float radius, int id, string frame_id, float r, float g, float b);
 
-    bool    findBestArc(int n, const vector<PoseStamped>& plan, Arc& arc);
+    bool    findBestCommandVelocity(const vector<PoseStamped>& plan, Twist& best_cmd_vel);
     rose_geometry::Point   findFootprintSteepestDescent(  const Pose& global_pose, 
                                                                     const std::vector<Position2DInt>& footprint_cells);
     Pose   findStrafeTarget(    const vector<rose_geometry::Point>& footprint,
                                 float distance_limit);
     
     float   findMaxPossibleRotation(const Pose& pose, const vector<rose_geometry::Point>& footprint, int direction);
-    void    limitMaximalStrafeDistance( Pose& pose);
+    void    limitMaximalStrafeDistance(Pose& pose);
     float   findMaximalStrafeDistance(  const Pose& pose,
                                         const vector<rose_geometry::Point>& footprint,
                                         const rose_geometry::Point& direction,
@@ -150,22 +160,29 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     vector<rose_geometry::Point> createBoundingPolygon(   const rose_geometry::Point center,
                                                                     const vector<rose_geometry::Point> polygon,
                                                                     float margin);
+    Pose    getAlignPose(           const PoseStamped& global_pose, 
+                                    const std::vector<PoseStamped>& plan,
+                                    const int& n,
+                                    const int& range,
+                                    const float& max_distance);
 
-    Pose    getPathDirectionPose(   const Pose& global_pose, 
-                                    const vector<PoseStamped>& plan,
-                                    int n);
-    Pose    getAimAtPathPose(       const Pose& global_pose, 
-                                    const vector<PoseStamped>& plan,
-                                    int n);
+    Pose    getPathDirectionPose(   const PoseStamped& global_pose, 
+                                    const std::vector<PoseStamped>& plan,
+                                    const int& n);
+    Pose    getAimAtPathPose(       const PoseStamped& global_pose, 
+                                    const std::vector<PoseStamped>& plan,
+                                    const int& n);
 
     VelCalcResult calculateDriveVelocityCommand(Twist& cmd_vel);
     VelCalcResult calculateRotateVelocityCommand(Twist& cmd_vel);
     VelCalcResult calculateStrafeVelocityCommand(Twist& cmd_vel);
+    float   radiusFromVelocity(const Twist& velocity);
     float   currentRadius();
-    Arc     findArc(const Pose& start_pose, const rose_geometry::Point& check_waypoint);
+    Arc     createArcFromPoseAndTarget(const Pose& start_pose, const rose_geometry::Point& check_waypoint);
+    Arc     createArcFromVelocity(const Pose& start_pose, const Twist& vel, const float& percentage_of_circle);
     
-    vector<Position2DInt>                       getLethalCellsInPolygon(const vector<rose_geometry::Point>& polygon);
-    vector<rose_geometry::Point>      getCellsPoints( const vector<Position2DInt>& cells, 
+    std::vector<Position2DInt>               getLethalCellsInPolygon(const vector<rose_geometry::Point>& polygon);
+    std::vector<rose_geometry::Point>        getCellsPoints(    const vector<Position2DInt>& cells, 
                                                                 bool only_center_point, 
                                                                 const vector<rose_geometry::Point>& filter_polygon = vector<rose_geometry::Point>());
 
@@ -181,7 +198,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     ros::NodeHandle   pn_;
 
 
-    tf::TransformListener*       tf_;    
+    tf::TransformListener*       tf_listener_;    
     costmap_2d::Costmap2DROS*    costmap_ros_;
     costmap_2d::Costmap2D*       costmap_;
     ArcLocalPlannerCostmapModel* world_model_;   ///< @brief The world model that the controller uses for collision detection
@@ -195,7 +212,9 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
     // Robot state
     PoseStamped         global_pose_;
     Twist               local_vel_;
-    
+
+    tf::Stamped<tf::Pose> global_pose_tf_;
+
     vector<rose_geometry::Point>       footprint_;
     vector<rose_geometry::Point>       transformed_footprint_;
     double              inscribed_radius_;
@@ -243,8 +262,7 @@ class ArcLocalPlanner : public nav_core::BaseLocalPlanner
 
     TwistMAF cmd_vel_maf_; 
 
-    ros::Time begin_;
-
+    FootprintCollisionChecker FCC_;
 };
 };
 

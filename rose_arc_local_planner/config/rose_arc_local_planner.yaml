@@ -6,7 +6,8 @@ cost_function_weights:
     # Distance over global path score
     distance: 1.0
 
-    # Clearance towards obstacles score
-    clearance: 0.75
+    # Distance from global path cost
+    clearance: 0.20
+
     # Arc difference cost
-    difference: 2.0
+    difference: -0.05

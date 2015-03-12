@@ -50,28 +50,34 @@ using namespace ClipperLib;
 typedef rose_geometry::Point                    Vertex;
 typedef rose_geometry::Stamped<Vertex>          StampedVertex;
 typedef std::vector<Vertex>                     Vertices;
-typedef std::vector<StampedVertex>              StampedVertices;
-typedef std::vector<Vertex>                     Polygon;
+typedef Vertices                                Polygon;
 typedef std::vector<Polygon>                    Polygons;
+typedef std::vector<StampedVertex>              StampedVertices;
+typedef StampedVertices                         StampedPolygon;
+typedef std::vector<StampedPolygon>             StampedPolygons;
 typedef std::vector<geometry_msgs::PoseStamped> Trajectory;
 
 class FootprintCollisionChecker
 {
   public:
-    FootprintCollisionChecker(ros::NodeHandle& n);
+    FootprintCollisionChecker();
     ~FootprintCollisionChecker();
 
     bool    setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint);
     bool    addPoints(const StampedVertices& new_lethal_points);
     bool    clearPoints();
     StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);
-    void    check(const geometry_msgs::Twist& vel, float& euclidean_distance, float& rotation , bool& reached_max_sim_time);
+    bool    checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t);
+    bool    checkTrajectory(const Trajectory& trajectory);
     bool    collision(const Polygon& polygon, const StampedVertices& lethal_points);
-    Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt);
+    Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt, const float& forward_t, const float& max_distance);
     Polygon getPolygonAtPose( const geometry_msgs::PoseStamped& stamped_pose, 
                                 const std::vector<rose_geometry::Point>& footprint);
     bool    setMaxDistance(float max_distance);
     bool    setMaxForwardSimTime(float max_forward_sim_time);
+
+    void    showCollisions();
+    void    hideCollisions();
 
   protected:
     StampedVertices             lethal_points_;
@@ -85,16 +91,18 @@ class FootprintCollisionChecker
     typedef std::vector<rose_geometry::Point> polygon;
     typedef std::vector<polygon> polygons;
 
-    Polygon     getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
-    Polygon     unionPolygons(const Polygons& polygons);
-    Path        polygonToPath(const Polygon& polygon);
-    Paths       polygonsToPaths(const Polygons& polygons);
-    Polygon     pathToPolygon(const Path& path);
-    Polygons    pathsToPolygons(const Paths& paths);
+    Polygon         getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Polygon         unionPolygons(const Polygons& polygons);
+    Path            polygonToPath(const Polygon& polygon);
+    Paths           polygonsToPaths(const Polygons& polygons);
+    Polygon         pathToPolygon(const Path& path);
+    Polygons        pathsToPolygons(const Paths& paths);
 
     void getTrajectoryDistance(const Trajectory& trajectory, float& euclidean_distance, float& rotation);
     void getPoseDistance(const geometry_msgs::PoseStamped& pose_a, const geometry_msgs::PoseStamped& pose_b, float& euclidean_distance, float& rotation);
-
+    Polygon createAABB(const Polygon& polygon, float margin);
+    bool inAABB(const Vertex& point, const Polygon& aabb);
+    
     void drawPose(ros::NodeHandle& n, const geometry_msgs::PoseStamped& stamped_pose, int id, float r, float g, float b);
     void publishPolygon(polygon transformed_footprint, std::string frame, std::string name);
     void drawPoint(const StampedVertex& stamped_point, int id, float r, float g, float b);
@@ -105,6 +113,8 @@ class FootprintCollisionChecker
     std::map<std::string, ros::Publisher> footprint_pubs_;
 
     std::mutex                  points_mutex_;
+
+    bool    show_collissions_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 

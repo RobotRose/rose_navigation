@@ -16,10 +16,10 @@
 
 using namespace ClipperLib;
 
-FootprintCollisionChecker::FootprintCollisionChecker(ros::NodeHandle& n)
+FootprintCollisionChecker::FootprintCollisionChecker()
     : max_distance_(3.0)
     , max_forward_sim_time_(5.0)
-    , n_(n)
+    , show_collissions_(false)
 {
     rviz_marker_pub_ = n_.advertise<visualization_msgs::Marker>( "footprint_collision_checker_debug", 0 );
 }
@@ -67,41 +67,38 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
 
     StampedVertices transformed_stamped_points;
     
-    for(auto stamped_lethal_point : stamped_points)
-    {
-        transformed_stamped_points.push_back(stamped_lethal_point);
-    }
-
     ROS_DEBUG_NAMED(ROS_NAME, "Transforming %d vertices to frame '%s'.", (int)stamped_points.size(), frame_id.c_str());
 
-
     std::map<std::string, geometry_msgs::PoseStamped> transformations;
-    for(const auto& stamped_lethal_point : transformed_stamped_points)
+    for(const StampedVertex& stamped_lethal_point : stamped_points)
     {
+        std::string in_frame = stamped_lethal_point.header.frame_id;
+        
         // Check if not yet in correct frame
-        if(stamped_lethal_point.header.frame_id != frame_id)
+        if(in_frame != frame_id)
         {
             geometry_msgs::PoseStamped transformation;
+
 
             // Do we already have this transform looked-up and stored in the map
             if(transformations.find(stamped_lethal_point.header.frame_id) != transformations.end())
             {
                 // Load the transformation from the map
-                ROS_DEBUG_NAMED(ROS_NAME, "Loading transformation from point frame '%s' to frame of motion '%s' from transformations map.", stamped_lethal_point.header.frame_id.c_str(), frame_id.c_str());
+                ROS_DEBUG_NAMED(ROS_NAME, "Loading transformation from lethal point in frame '%s' to frame of motion '%s' from transformations map.", in_frame.c_str(), frame_id.c_str());
                 transformation = transformations.at(stamped_lethal_point.header.frame_id);
             }
             else
             {
-                ROS_DEBUG_NAMED(ROS_NAME, "Looking up transformation from point frame '%s' to frame of motion '%s'.", stamped_lethal_point.header.frame_id.c_str(), frame_id.c_str());
+                ROS_DEBUG_NAMED(ROS_NAME, "Looking up transformation from lethal point in frame '%s' to frame of motion '%s'.", in_frame.c_str(), frame_id.c_str());
                 // Lookup the transform and safe to the map
-                if(!rose_transformations::getLatestFrameInFrame(tf_listener_, frame_id, stamped_lethal_point.header.frame_id, transformation)) 
+                if( not rose_transformations::getLatestFrameInFrame(tf_listener_, frame_id, stamped_lethal_point.header.frame_id, transformation) )  
                 {
-                    ROS_WARN_NAMED(ROS_NAME, "Error looking up transformation from point frame '%s' to frame of motion '%s'. Skipping this point.", stamped_lethal_point.header.frame_id.c_str(), frame_id.c_str());
+                    ROS_WARN_NAMED(ROS_NAME, "Error looking up transformation from lethal point in frame '%s' to frame of motion '%s'. Skipping this point.", in_frame.c_str(), frame_id.c_str());
                     continue;
                 }
 
                 // Add to map
-                ROS_DEBUG_NAMED(ROS_NAME, "Adding transformation from '%s' -> '%s' to transformations map.", stamped_lethal_point.header.frame_id.c_str(), frame_id.c_str());
+                ROS_DEBUG_NAMED(ROS_NAME, "Adding transformation from '%s' -> '%s' to transformations map.", in_frame.c_str(), frame_id.c_str());
                 transformations[stamped_lethal_point.header.frame_id] = transformation;
             }
 
@@ -111,71 +108,44 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
 
             rose_geometry::translatePoint(-transformation.pose.position.x, -transformation.pose.position.y, transformed_stamped_lethal_point.data);
             rose_geometry::rotatePointAroundOrigin(transformed_stamped_lethal_point.data, -tf::getYaw(transformation.pose.orientation));
-
+            
             transformed_stamped_points.push_back(transformed_stamped_lethal_point);
         }
+        else
+            transformed_stamped_points.push_back(stamped_lethal_point);
     }
 
     return transformed_stamped_points;
 }
 
-// Returns radians when only rotating
-// Returns normal distance traveled of the frame_of_motion otherwise.
-void FootprintCollisionChecker::check(const geometry_msgs::Twist& vel, float& euclidean_distance, float& rotation, bool& reached_max_sim_time )
+// Return true if a collission does occure within forward_t
+bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t)
 {
-    euclidean_distance  = 0.0;
-    rotation            = 0.0;
+    return checkTrajectory(calculatePoseTrajectory(vel, 0.3, forward_t, max_distance_));
+}
 
+// Return true if a collission does occure
+bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
+{
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
-        return;
+        return true;
     }
-
-    Trajectory trajectory = calculatePoseTrajectory(vel, 0.3);
+    // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
 
     // Calculate and publish complete swept polygon
     Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
-    publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
+    // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
 
-    // Find when, if, we will collide
-    Trajectory partial_trajectory;
-    Polygon partial_swept_polygon;
-    int index = 0;
-    for(const auto& stamped_pose : trajectory)
+    if(collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
     {
-        partial_trajectory.push_back(stamped_pose);
-        partial_swept_polygon = getSweptPolygon(partial_trajectory, footprint_);
-
-        if(collision(partial_swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
-        {
-            ROS_DEBUG_NAMED(ROS_NAME, "Collision detected at trajectory index: %d.", index);
-            break;
-        }
-        index++;
+        // ROS_INFO_NAMED(ROS_NAME, "Collision detected.");
+        return true;
     }
 
-    if(index > 0)
-    {
-        Trajectory collision_free_trajectory(trajectory.begin(), std::next(trajectory.begin(), index));
-        publishPolygon(getSweptPolygon(collision_free_trajectory, footprint_), frame_of_motion_.header.frame_id, "collision_swept_polygon");
-        
-        // Calculate the distance and rotation of travel
-        getTrajectoryDistance(collision_free_trajectory, euclidean_distance, rotation);        
-    }
-    else
-    {
-        // Already in collision!
-        ROS_WARN_NAMED(ROS_NAME, "In collision.");
-        euclidean_distance  = 0.0;
-        rotation            = 0.0;
-    }
-
-    //! @todo OH: HACK
-    if(index >= trajectory.size() - 1)
-        reached_max_sim_time = true;
-
-    ROS_DEBUG_NAMED(ROS_NAME, "Collision free travel for %.2fm/%.2frad/%.2fdeg.", euclidean_distance, rotation, rotation*(180.0/M_PI));
+    // ROS_INFO_NAMED(ROS_NAME, "Collision free travel for complete trajectory.");
+    return false;
 }
 
 void FootprintCollisionChecker::getTrajectoryDistance(const Trajectory& trajectory, float& euclidean_distance, float& rotation)
@@ -203,6 +173,43 @@ void FootprintCollisionChecker::getPoseDistance(const geometry_msgs::PoseStamped
     rotation            = rose_geometry::getShortestSignedAngle(tf::getYaw(pose_a.pose.orientation), tf::getYaw(pose_b.pose.orientation));
 }
 
+Polygon FootprintCollisionChecker::createAABB(  const Polygon& polygon,
+                                                float margin)
+{
+    float minx = 1e6;
+    float maxx = -1e6;
+    float miny = 1e6;
+    float maxy = -1e6;
+    for(const auto& point : polygon)
+    {
+        minx = fmin(point.x, minx);
+        maxx = fmax(point.x, maxx);
+        miny = fmin(point.y, miny);
+        maxy = fmax(point.y, maxy);
+    }
+
+    minx -= margin;
+    maxx += margin;
+    miny -= margin;
+    maxy += margin;
+
+    vector<rose_geometry::Point> bounding_polygon;
+    bounding_polygon.push_back(Vertex(maxx, maxy, 0.0)); 
+    bounding_polygon.push_back(Vertex(minx, maxy, 0.0));
+    bounding_polygon.push_back(Vertex(minx, miny, 0.0));
+    bounding_polygon.push_back(Vertex(maxx, miny, 0.0));
+
+    return bounding_polygon;
+}
+
+bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
+{
+    if(point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y >  aabb.at(2).y)
+        return true;
+
+    return false;
+}
+
 bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
 {
     if(stamped_lethal_points.empty())
@@ -210,17 +217,25 @@ bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedV
 
     Path path = polygonToPath(polygon);
     int id = 0;
+    // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
+    Polygon aabb = createAABB(polygon, 0.001);
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
-        drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
-        if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
-            return true;
+        if(show_collissions_)
+            drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
+
+        if(inAABB(stamped_lethal_point.data, aabb))
+            if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
+                return true;
     }
 
     return false;
 }
 
-Trajectory FootprintCollisionChecker::calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt)
+Trajectory FootprintCollisionChecker::calculatePoseTrajectory(  const geometry_msgs::Twist& vel, 
+                                                                const float& dt, 
+                                                                const float& forward_t, 
+                                                                const float& max_distance)
 {
     float dyaw;
     geometry_msgs::Vector3 translation;
@@ -229,30 +244,32 @@ Trajectory FootprintCollisionChecker::calculatePoseTrajectory(const geometry_msg
     dyaw            = dt*vel.angular.z;
 
     geometry_msgs::PoseStamped moving_pose = frame_of_motion_;
+
+    ros::Time generation_time = ros::Time::now();
     
-    float t = 0.0;
-    float distance = 0.0;
+    float at_t          = 0.0;
+    float at_distance   = 0.0;
     Trajectory trajectory;
     do
     {          
-        moving_pose = rose_geometry::translatePose(moving_pose, translation);
+        moving_pose         = rose_geometry::translatePose(moving_pose, translation);
         tf::Quaternion quat = tf::createQuaternionFromYaw(dyaw);
-        moving_pose = rose_geometry::rotatePose(moving_pose, quat);
+        moving_pose         = rose_geometry::rotatePose(moving_pose, quat);
 
-        translation = rose_geometry::rotate2DVector(translation, dyaw);
+        translation         = rose_geometry::rotate2DVector(translation, dyaw);
 
         trajectory.push_back(moving_pose);
-        t           += dt;
-        distance    += sqrt(translation.x*translation.x + translation.y*translation.y);
-    } while (t <= max_forward_sim_time_ && distance <= max_distance_);
+        at_t        += dt;
+        at_distance += sqrt(translation.x*translation.x + translation.y*translation.y);
+    } while (at_t <= forward_t && at_distance <= max_distance);
 
     // Debug trajectory
-    int id = 0;
-    ros::NodeHandle nh("~");
-    for(const auto& pose : trajectory)
-    {
-        drawPose(nh, pose, id++, 0.0, 1.0, 0.0);
-    }
+    // int id = 0;
+    // ros::NodeHandle nh("~");
+    // for(const auto& pose : trajectory)
+    // {
+    //     drawPose(nh, pose, id++, 0.0, 1.0, 0.0);
+    // }
 
     return trajectory;
 }
@@ -423,6 +440,16 @@ bool FootprintCollisionChecker::setMaxForwardSimTime(float max_forward_sim_time)
 {
     max_forward_sim_time_ = max_forward_sim_time;
     return true;
+}
+
+void FootprintCollisionChecker::showCollisions()
+{
+    show_collissions_ = true;
+}
+
+void FootprintCollisionChecker::hideCollisions()
+{
+    show_collissions_ = false;
 }
 
 // --- debug ---

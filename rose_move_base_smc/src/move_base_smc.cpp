@@ -209,7 +209,7 @@ void MoveBaseSMC::CB_driveControllerSuccess(const actionlib::SimpleClientGoalSta
 
 void MoveBaseSMC::CB_driveControllerFail(const actionlib::SimpleClientGoalState& state, const rose_base_msgs::cmd_velocityResultConstPtr& client_result)
 {
-	ROS_WARN_NAMED(ROS_NAME, "Error while forwarding command velocity from /cmd_vel to drive controller SMC interface, canceling clients.");
+	ROS_WARN_NAMED(ROS_NAME, "Error while forwarding command velocity from /cmd_vel to drive controller.");
 
 	// Publish the return code for use in the local planner? //! @todo OH: remove?
 	std_msgs::Int32 return_code; 

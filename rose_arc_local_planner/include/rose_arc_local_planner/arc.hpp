@@ -49,8 +49,8 @@ class Arc
         , extra_start_distance_(0.0)
         , extra_stop_distance_(0.0)
       {
-        float dist                  = rose_geometry::distance(start_point, target_point);
-        float angle_between_points  = angle(start_point, target_point);
+        float dist                  = rose_geometry::distance(start_point, stop_point_);
+        float angle_between_points  = angle(start_point, stop_point_);
         float angle_to_center       = 0.0;
 
         
@@ -73,15 +73,15 @@ class Arc
 
         //! @todo OH: add check for tangent_angle->angle_between_points == -0.5*M_PI, 0.0, +0.5*M_PI
         
-        center_.x   = target_point.x - start_point.x;
-        center_.y   = target_point.y - start_point.y;
+        center_.x   = stop_point_.x - start_point.x;
+        center_.y   = stop_point_.y - start_point.y;
         rose_geometry::rotateVect(&center_.x, &center_.y, angle_to_center);
         rose_geometry::setVectorLengthXY(&center_.x, &center_.y, abs_radius_);
         center_.x   += start_point.x;
         center_.y   += start_point.y;
 
         start_angle_    = angle(center_, start_point);
-        stop_angle_     = angle(center_, target_point);
+        stop_angle_     = angle(center_, stop_point_);
 
         float shortest_angle = rose_geometry::getShortestSignedAngle(start_angle_, stop_angle_);
 
@@ -101,6 +101,81 @@ class Arc
             else
                 stop_angle_     = start_angle_ + shortest_angle;
         }
+
+        recalculateArcPoses();
+    }
+
+    // Create arc given start point, tangent_angle, radius and percentage factor (percentage of the complete circle to create the arc with)
+    Arc(const rose_geometry::Point& start_point, const float& tangent_angle, const float& radius, const float& percentage)
+        : pointize_steps_(10)
+        , start_point_(start_point)
+        , signed_radius_(radius)
+        , extra_start_distance_(0.0)
+        , extra_stop_distance_(0.0)
+    {
+        if(signed_radius_ < 0.0)
+            clockwise_ = true;
+        else
+            clockwise_ = false;
+        
+        float angle_measure = 2.0*M_PI*(percentage/100.0);
+
+        abs_radius_ = fabs(signed_radius_);
+
+        float vx = 1.0;
+        float vy = 0.0;
+
+        if(clockwise_)
+            rose_geometry::rotateVect(&vx, &vy, tangent_angle + 0.5*M_PI);
+        else
+            rose_geometry::rotateVect(&vx, &vy, tangent_angle - 0.5*M_PI);
+
+        rose_geometry::setVectorLengthXY(&vx, &vy, abs_radius_);
+
+        center_.x       = start_point_.x + vx;
+        center_.y       = start_point_.y + vy;
+        start_angle_    = angle(center_, start_point);
+
+        vx = 1.0;
+        vy = 0.0;
+
+        if(clockwise_)
+            rose_geometry::rotateVect(&vx, &vy, start_angle_ + angle_measure);
+        else
+            rose_geometry::rotateVect(&vx, &vy, start_angle_ - angle_measure);
+
+        rose_geometry::setVectorLengthXY(&vx, &vy, abs_radius_);
+
+        stop_point_.x   = center_.x + vx;
+        stop_point_.y   = center_.y + vy;
+
+        if(clockwise_)
+            stop_angle_     = start_angle_ + angle_measure;
+        else
+            stop_angle_     = start_angle_ - angle_measure;
+
+        // ROS_INFO("start_point [ %.2f, %.2f ], stop_point [ %.2f, %.2f ], start_angle_ %.2f, stop_angle_ %.2f, percentage %.2f, angle_measure %.2f", 
+        //     start_point_.x, start_point_.y, stop_point_.x, stop_point_.y, start_angle_, stop_angle_, percentage, angle_measure);
+
+
+        // float shortest_angle = rose_geometry::getShortestSignedAngle(start_angle_, stop_angle_);
+
+        // if(shortest_angle <= 0.0)
+        // {
+        //     // Shortest rotation is CW (shortest_angle is negative)
+        //     if(clockwise_)
+        //         stop_angle_     = start_angle_ + shortest_angle;
+        //     else
+        //         stop_angle_     = start_angle_ + (2.0*M_PI + shortest_angle);
+        // }
+        // else
+        // {
+        //     // Shortest rotation is CCW (shortest_angle is positive)
+        //     if(clockwise_)
+        //         stop_angle_     = start_angle_ + (-2.0*M_PI + shortest_angle);
+        //     else
+        //         stop_angle_     = start_angle_ + shortest_angle;
+        // }
 
         recalculateArcPoses();
     }
@@ -402,18 +477,18 @@ class Arc
     rose_geometry::Point  center_;
     rose_geometry::Point  start_point_;
     rose_geometry::Point  stop_point_;
-    float                           signed_radius_;
-    float                           abs_radius_;
-    float                           start_angle_;
-    float                           stop_angle_;
-    float                           start_tangent_angle_;
-    float                           stop_tangent_angle_;
-    float                           extra_start_distance_;
-    float                           extra_stop_distance_;
-    int                             pointize_steps_;
-    bool                            clockwise_;
+    float signed_radius_;
+    float abs_radius_;
+    float start_angle_;
+    float stop_angle_;
+    float start_tangent_angle_;
+    float stop_tangent_angle_;
+    float extra_start_distance_;
+    float extra_stop_distance_;
+    int   pointize_steps_;
+    bool  clockwise_;
 
-    std::vector<Pose>                arc_poses_;
+    std::vector<Pose> arc_poses_;
 
     void recalculateArcPoses()
     {
