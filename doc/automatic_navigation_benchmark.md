@@ -39,3 +39,6 @@ Obstacles can all, in theory be seen by the robot. (What to do in situations whe
 ### U-turns
 ### Dead ends
 ### Dynamic enviroments
+
+
+![Alt text](images/mini.jpg "Test image")
