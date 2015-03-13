@@ -7,6 +7,7 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    inkscape:version="0.91 r"
@@ -14,7 +15,10 @@
    id="svg2"
    height="1052.3622047"
    width="744.09448819"
-   sodipodi:docname="simple-1.svg">
+   sodipodi:docname="simple-2.svg"
+   inkscape:export-filename="/home/okke/git/rose/rose/src/rose_navigation/doc/images/simple-2.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -22,9 +26,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.979899"
-     inkscape:cx="224.84716"
-     inkscape:cy="820.66115"
+     inkscape:zoom="1.4"
+     inkscape:cx="163.72399"
+     inkscape:cy="810.03635"
      inkscape:document-units="px"
      inkscape:current-layer="svg2"
      showgrid="false"
@@ -35,6 +39,11 @@
      inkscape:window-maximized="1" />
   <defs
      id="defs4">
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#pattern6120"
+       id="pattern6128"
+       patternTransform="matrix(-0.10017911,0.10151952,3.5380069,3.4912929,-83.582012,149.92527)" />
     <marker
        inkscape:stockid="TriangleOutL"
        orient="auto"
@@ -75,6 +84,52 @@
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
          transform="scale(0.8,0.8)" />
     </marker>
+    <pattern
+       patternUnits="userSpaceOnUse"
+       width="25.065369"
+       height="92.580115"
+       patternTransform="translate(-96.438506,144.15947)"
+       id="pattern6097">
+      <rect
+         ry="0"
+         rx="11.618953"
+         y="0.74954152"
+         x="0.74954152"
+         height="91.081032"
+         width="11.065671"
+         id="rect6027"
+         style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1.49908304;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <rect
+         ry="0"
+         rx="11.618953"
+         y="0.74954152"
+         x="13.250197"
+         height="91.081032"
+         width="11.065671"
+         id="rect6027-4"
+         style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.49899995;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </pattern>
+    <pattern
+       patternUnits="userSpaceOnUse"
+       width="25.616397"
+       height="50.701087"
+       patternTransform="translate(-83.582012,149.92527)"
+       id="pattern6120">
+      <rect
+         y="0.74949998"
+         x="0.74949998"
+         height="49.118668"
+         width="11.364216"
+         id="rect6103"
+         style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1.49899995;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <rect
+         y="0.83291978"
+         x="13.502682"
+         height="49.118668"
+         width="11.364216"
+         id="rect6103-6"
+         style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.49899995;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </pattern>
   </defs>
   <metadata
      id="metadata7">
@@ -93,19 +148,20 @@
      inkscape:groupmode="layer"
      inkscape:label="Layer 1" />
   <rect
-     y="38.75745"
-     x="54.252411"
-     height="355.73013"
-     width="254.91432"
+     y="38.772099"
+     x="54.267059"
+     height="340.04349"
+     width="283.67438"
      id="rect3846"
-     style="fill:none;stroke:#000000;stroke-width:0.93340558;stroke-opacity:1" />
+     style="fill:#ffffff;stroke:#000000;stroke-width:0.96269834;stroke-opacity:1;fill-opacity:1" />
   <path
-     style="fill:none;stroke:#000000;stroke-width:1.71207917px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#TriangleOutL)"
-     d="m 179.2857,130.5993 0,-18.30865"
+     style="fill:none;stroke:#000000;stroke-width:1.25794673px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#TriangleOutL)"
+     d="m 127.18642,115.72208 0,-13.45224"
      id="path5950"
      inkscape:connector-curvature="0" />
   <g
-     id="g6186">
+     id="g6186"
+     transform="matrix(0.73474801,0,0,0.73474801,-4.5433914,88.693075)">
     <g
        transform="translate(-7.1428572,1.4285714)"
        id="g6160">
@@ -133,4 +189,12 @@
        d="m 208.47023,261.79155 -52.6542,73.36232"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
   </g>
+  <rect
+     style="fill:url(#pattern6128);fill-opacity:1;stroke:#000000;stroke-width:0.94800001;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect3414"
+     width="153.44334"
+     height="26.208754"
+     x="54.522007"
+     y="180.06923"
+     ry="10.121786" />
 </svg>
