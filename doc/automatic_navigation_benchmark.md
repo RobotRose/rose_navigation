@@ -19,6 +19,10 @@ How to grade these benchmarks?
 * Time (seconds)
 * Smoothness (subjective 0 - 10)
 
+## Abbreviations
+IR - inscribe radius of the robot
+CR - circumscribed radius of the robot
+
 Simple Goal Benchmarks
 ----------
 
@@ -56,7 +60,7 @@ Move to the goal in a test area with one obstacle extruding from the left side o
 
 ![Alt text](images/simple-2.png "Simple 2")
 
-Situation with both the robot and the goal at orientation zero degrees. The extrusion obstacle is placed half way from the robot to the goal. The gap on the right side of the testing area is twice the robots circumscribed radius.
+Situation with both the robot and the goal at orientation zero degrees. The extrusion obstacle is placed half way from the robot to the goal. The gap on the right side of the testing area is twice the CR.
 
 The goal is given 4 meters away from the robot. The test is repeated with varying orientations of the robot start pose and the goal pose.
 
@@ -73,6 +77,24 @@ The goal is given 4 meters away from the robot. The test is repeated with varyin
 | 180 				| 180 			   |         |              |      |            |
 
 ### Replanning
+These benchmarks will test the replanning behaviour.
+#### Replanning 1
+The test area must be setup like depicted in the following picture:
+
+![Alt text](images/replanning-1.png "Replanning 1")
+
+The blue obstacle is hidden from sight by the red obstacle, and thus unkown to the robot at the beginning of the test.
+The gap on the right and left side of the red obstacle is twice the CR.
+The path left from the robot will be the preferred initial path of the robot due to the lower distance. When the obstacle around the corner is detected however the robot should replan and take the path to the right of the red obstacle.
+
+This test can be tested with variable width of the red obstacle. A larger width will increase the 'detour' the robot has to take in order to reach the goal
+
+| Red obstacle width | Reached | # collisions | Time | Smoothness |
+| ------------------ | ------- | ------------ | ---- | ---------- |
+| 4 CR 				 |         |              |      |            |
+| 8 CR 				 |         |              |      |            |
+| 16 CR 			 |         |              |      |            |
+
 ### Unreachable goal
 ### Narrow passages
 ### L-shaped passages
