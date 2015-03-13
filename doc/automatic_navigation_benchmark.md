@@ -20,8 +20,8 @@ How to grade these benchmarks?
 * Smoothness (subjective 0 - 10)
 
 ## Abbreviations
-IR - inscribe radius of the robot
-CR - circumscribed radius of the robot
+* IR - inscribe radius of the robot
+* CR - circumscribed radius of the robot
 
 Simple Goal Benchmarks
 ----------
