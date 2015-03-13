@@ -31,7 +31,7 @@ Obstacles can all, in theory be seen by the robot. (What to do in situations whe
 #### Simple 1
 ##### Enviroment setup
 A room without any obstacles.
-![Alt text](images/simple-1.jpg "Simple 1")
+![Alt text](images/simple-1.svg "Simple 1")
 
  The goal has to be given 5 meters away from the robot, straight ahead.
 #### Simple 2
