@@ -26,7 +26,16 @@ These benchmarks test the ability of the automatic navigation to navigate to a s
 A goal pose is a position and orientation. The ground is assumed to be flat and easy for the robot to drive on.
 Obstacles can all, in theory be seen by the robot. (What to do in situations where the robot has to drive backwards and has no kinect for example?)
 
+
 ### Simple
+#### Simple 1
+##### Enviroment setup
+A room without any obstacles.
+![Alt text](images/simple-1.jpg "Simple 1")
+
+ The goal has to be given 5 meters away from the robot, straight ahead.
+#### Simple 2
+The same room as wit
 ### Replanning
 ### Unreachable goal
 ### Narrow passages
@@ -39,6 +48,3 @@ Obstacles can all, in theory be seen by the robot. (What to do in situations whe
 ### U-turns
 ### Dead ends
 ### Dynamic enviroments
-
-
-![Alt text](images/mini.jpg "Test image")
