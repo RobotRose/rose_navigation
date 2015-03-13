@@ -34,6 +34,7 @@ These test assume that in all situations the localization of the robot, aka its 
 Move to the goal in a room without any obstacles.
 
 ![Alt text](images/simple-1.png "Simple 1")
+
 Situation with both the robot and the goal at orientation zero degrees.
 
 The goal has to be given 4 meters away from the robot. The test should be repeated with varying orientations of the robot start pose and the goal pose.
