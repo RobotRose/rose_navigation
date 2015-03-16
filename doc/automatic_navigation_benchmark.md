@@ -116,8 +116,6 @@ The measured time is the time it takes for the robot to abort the navigation att
 | Aborted | # collisions | Time | Smoothness |
 | ------- | ------------ | ---- | ---------- |
 |         |              |      |            |
-|         |              |      |            |
-|         |              |      |            |
 
 #### Unreachable 2
 
@@ -130,8 +128,6 @@ The measured time is the time it takes for the robot to abort the navigation att
 
 | Aborted | # collisions | Time | Smoothness |
 | ------- | ------------ | ---- | ---------- |
-|         |              |      |            |
-|         |              |      |            |
 |         |              |      |            |
 
 ### Narrow passages
@@ -220,8 +216,6 @@ The robot starting position must be 5 times the CR away from the obstacle, and t
 | Reached | # collisions | Time | Smoothness |
 | ------- | ------------ | ---- | ---------- |
 |         |              |      |            |
-|         |              |      |            |
-|         |              |      |            |
 
 ### Slalom 
 
@@ -237,8 +231,6 @@ The distance, from the goal pose to the last obstacle, must be 3 CR.
 
 | Reached | # collisions | Time | Smoothness |
 | ------- | ------------ | ---- | ---------- |
-|         |              |      |            |
-|         |              |      |            |
 |         |              |      |            |
 
 ### U-turns
