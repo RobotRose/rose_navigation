@@ -49,7 +49,7 @@ Move to the goal in a test area without any obstacles.
 
 Situation with both the robot and the goal at orientation zero degrees.
 
-The goal is given 4 meters away from the robot. The test is repeated with varying orientations of the robot start pose and the goal pose.
+The goal is given 4 CR forward from the start pose. The test is repeated with varying orientations of the robot start pose and the goal pose.
 
 | Orientation Robot | Orientation Goal | Reached | # collisions | Time | Smoothness |
 | ----------------- | ---------------- | ------- | ------------ | ---- | ---------- |
@@ -86,10 +86,12 @@ The goal is given 4 meters away from the robot. The test is repeated with varyin
 
 ### Replanning
 These benchmarks will test the replanning behavior.
+
 #### Replanning 1
 
 ![Alt text](images/replanning-1.png "Replanning 1")
 
+The start pose is aligned with the left side of the red obstacle. The goal pose is placed 3 CR to the right and forward of the start pose.
 The blue obstacle is hidden from sight by the red obstacle, and thus unknown to the robot at the beginning of the test.
 The gaps on the right and left side of the red obstacle are at least twice the CR.
 The path left from the robot will be the preferred initial path of the robot due to the lower distance. When the obstacle around the corner is detected however the robot should re-plan and take the path to the right of the red obstacle.
@@ -121,6 +123,8 @@ The measured time is the time it takes for the robot to abort the navigation att
 
 ![Alt text](images/unreachable-2.png "Unreachable 2")
 
+The distance between the start pose and the goal pose must be 5 CR.
+The red obstacle is extends 2 CR to the right of the start pose.
 The blue obstacle is hidden from sight by the red obstacle, and thus unknown to the robot at the beginning of the test.
 The gap on the right side of the red obstacle is at least twice the CR.
 The robot will have to plan a path around the red obstacle, as soon as it detects the blue obstacle it must recognize that the goal is in fact unreachable and correctly abort its navigation attempt.
@@ -132,10 +136,13 @@ The measured time is the time it takes for the robot to abort the navigation att
 
 ### Narrow passages
 These benchmarks will test whether the robot can pass through a narrow passage like an opened door.
+
 #### Narrow passage 1
 
 ![Alt text](images/narrow-passage-1.png "Narrow passage 1")
 
+The distance between the start pose and the opening must be 4 CR.
+The distance between the opening and the goal pose must be 4 CR.
 The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. The minimal width is at least the IR, or the minimal width when the robot is moving 'forward'.
 
 | Passage width       | Reached | # collisions | Time | Smoothness |
@@ -152,6 +159,8 @@ This will test the scenario when there is a door standing open to the side of a 
 
 ![Alt text](images/L-passage-1.png "L passage 1")
 
+The distance between the start pose and the opening must be 4 CR.
+The distance between the opening and the goal pose must be 2 CR.
 The obstacle protruding out from the side of the passage must be at least twice the CR.
 The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. The minimal width is at least the IR, or the minimal width when the robot is moving 'forward'.
 
@@ -166,7 +175,7 @@ The spacing between the red obstacles, the passage width, must be varied by a fa
 
 ![Alt text](images/narrow-corridor-1.png "Narrow corridor 1")
 
-The length of the passage, the blue obstacles, must be twice the CR.
+The length of the short edges of the corner, the blue obstacles, must be twice the CR.
 The spacing between the blue obstacles, the passage width, must be varied by a factor of the MW.
 
 | Passage width       | Reached | # collisions | Time | Smoothness |
@@ -210,8 +219,9 @@ This can be done artificially by limiting the range of the sensors.
 
 ![Alt text](images/single-obstacle-1.png "Single obstacle 1")
 
+The start pose must be 5 CR from the obstacle.
+The goal pose must be 5 CR on the opposite side of the obstacle.
 The obstacle in the center of the testing area must have a clearance of 4 times the CR.
-The robot starting position must be 5 times the CR away from the obstacle, and the goal pose must also be 5 times CR on the opposite side.
 
 | Reached | # collisions | Time | Smoothness |
 | ------- | ------------ | ---- | ---------- |
@@ -251,13 +261,13 @@ The width of the obstacle must be 0.25*IR.
 
 ### Dynamic environments
 
-
 #### Dynamic 1
 
 ![Alt text](images/dynamic-1.png "Dynamic 1")
 
 The width of the testing area is 3 times the CR, the length is 10 times the CR.
 The red dynamic obstacle must be added testing area, at the halfway point. The obstacle must be added as soon as the robot is at a distance 'C' from the halfway point.
+The start and end pose are positioned 1 CR from the lower and upper edge of the test area.
 
 | C         | Reached | # collisions | Time | Smoothness |
 | --------- | ------- | ------------ | ---- | ---------- |

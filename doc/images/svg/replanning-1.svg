@@ -27,7 +27,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="230.8341"
+     inkscape:cx="145.98129"
      inkscape:cy="862.98985"
      inkscape:document-units="px"
      inkscape:current-layer="svg2"
@@ -43,7 +43,7 @@
        inkscape:collect="always"
        xlink:href="#pattern6210"
        id="pattern6316"
-       patternTransform="matrix(0.11416352,-0.0716234,1.5134497,0.96413374,-110.48297,-163.96325)" />
+       patternTransform="matrix(0.11416352,-0.0716234,1.5134497,0.96413374,-110.48297,-155.96325)" />
     <marker
        inkscape:stockid="TriangleOutL"
        orient="auto"
@@ -186,7 +186,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -203,12 +203,12 @@
      style="fill:none;stroke:#000000;stroke-width:0.99497753;stroke-opacity:1" />
   <path
      style="fill:none;stroke:#000000;stroke-width:1.25794673px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#TriangleOutL)"
-     d="m 229.21183,119.25762 0,-13.45224"
+     d="m 219.21183,123.25762 0,-13.45224"
      id="path5950"
      inkscape:connector-curvature="0" />
   <g
      id="g6186"
-     transform="matrix(0.73474801,0,0,0.73474801,-44.949493,56.368194)">
+     transform="matrix(0.73474801,0,0,0.73474801,-28.787052,50.243813)">
     <g
        transform="translate(-7.1428572,1.4285714)"
        id="g6160">
@@ -250,7 +250,7 @@
      width="146.60013"
      height="15.830009"
      x="38.699364"
-     y="-170.8378"
+     y="-162.8378"
      ry="6.1135287"
      transform="matrix(0,1,-1,0,0,0)" />
 </svg>
