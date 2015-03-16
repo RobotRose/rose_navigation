@@ -13,7 +13,7 @@ Introduction
 
 In order to benchmark the automatic navigation software a set of well defined test situations is required. This document intends to provide these situations.
 
-## Grading
+### Grading
 The Benchmarks will be graded according four measurements:
 
 * Reaching goal (yes/no)
@@ -21,7 +21,7 @@ The Benchmarks will be graded according four measurements:
 * Time (seconds)
 * Smoothness (subjective 0 - 10)
 
-## Abbreviations
+### Abbreviations
 * IR - inscribed radius of the robot
 * CR - circumscribed radius of the robot
 * MW - minimal, driving direction, width of the robot
