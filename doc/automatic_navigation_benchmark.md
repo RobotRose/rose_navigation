@@ -11,12 +11,10 @@ Tester:
 Introduction
 ------------
 
-In order to benchmark the automatic navigation software a set of well defined test situations is required.
-This document intends to provide these situations.
+In order to benchmark the automatic navigation software a set of well defined test situations is required. This document intends to provide these situations.
 
-
-
-Grading of the benchmarks
+## Grading
+The Benchmarks will be graded according four measurements:
 
 * Reaching goal (yes/no)
 * # collisions
