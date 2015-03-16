@@ -8,11 +8,6 @@ Location:
 
 Tester: 
 
-Table of contents
------------------
-
-[ TOC ]
-
 Introduction
 ------------
 
