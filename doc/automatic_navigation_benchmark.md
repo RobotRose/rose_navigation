@@ -143,13 +143,13 @@ These benchmarks will test whether the robot can pass through a narrow passage l
 
 The distance between the start pose and the opening must be 4 CR.
 The distance between the opening and the goal pose must be 4 CR.
-The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. The minimal width is at least the IR, or the minimal width when the robot is moving 'forward'.
+The spacing between the red obstacles, the passage width, must be varied by a factor of the MW. 
 
-| Passage width       | Reached | # collisions | Time | Smoothness |
-| ------------------- | ------- | ------------ | ---- | ---------- |
-| 150% minimal width  |         |              |      |            |
-| 120% minimal width  |         |              |      |            |
-| 110% minimal width  |         |              |      |            |
+| Passage width | Reached | # collisions | Time | Smoothness |
+| ------------- | ------- | ------------ | ---- | ---------- |
+| 150% MW       |         |              |      |            |
+| 120% MW       |         |              |      |            |
+| 110% MW       |         |              |      |            |
 
 
 ### L-shaped passages
@@ -162,13 +162,13 @@ This will test the scenario when there is a door standing open to the side of a 
 The distance between the start pose and the opening must be 4 CR.
 The distance between the opening and the goal pose must be 2 CR.
 The obstacle protruding out from the side of the passage must be at least twice the CR.
-The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. The minimal width is at least the IR, or the minimal width when the robot is moving 'forward'.
+The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. 
 
-| Passage width       | Reached | # collisions | Time | Smoothness |
-| ------------------- | ------- | ------------ | ---- | ---------- |
-| 150% minimal width  |         |              |      |            |
-| 120% minimal width  |         |              |      |            |
-| 110% minimal width  |         |              |      |            |
+| Passage width | Reached | # collisions | Time | Smoothness |
+| ------------- | ------- | ------------ | ---- | ---------- |
+| 150% MW       |         |              |      |            |
+| 120% MW       |         |              |      |            |
+| 110% MW       |         |              |      |            |
 
 ### Narrow corridors
 ####  Narrow corridor 1
