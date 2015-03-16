@@ -1,8 +1,10 @@
 # Benchmark definition for automatic navigation
 ============
+Author: Okke Hendriks
+
 Date: 
 
-Location: Rose BV, Horsten 1, Eindhoven
+Location:
 
 Tester: 
 
@@ -12,7 +14,9 @@ Introduction
 In order to benchmark the automatic navigation software a set of well defined test situations is required.
 This document intends to provide these situations.
 
-How to grade these benchmarks?
+
+
+Grading of the benchmarks
 
 * Reaching goal (yes/no)
 * # collisions
@@ -20,21 +24,24 @@ How to grade these benchmarks?
 * Smoothness (subjective 0 - 10)
 
 ## Abbreviations
-* IR - inscribe radius of the robot
+* IR - inscribed radius of the robot
 * CR - circumscribed radius of the robot
+
+Test Area
+---------
+The test area is an area cordoned off by walls all around. These walls are also present in the 'global map' which the robot is given beforehand.
+The arrow on each picture is the goal pose, a pose is a position combined with a certain orientation. The ground is assumed to be flat and easy for the robot to drive on. Obstacles must all be visible to the sensors of the robot as long positions its sensors correctly, within their specified range. Thus if a certain robot only has a laser scanner for example, all obstacles must be well reflective and of enough height to be detected by the laser scanner.
 
 Simple Goal Benchmarks
 ----------
 
-These benchmarks test the ability of the automatic navigation to navigate to a simple goal pose. 
-A goal pose is a position and orientation. The ground is assumed to be flat and easy for the robot to drive on.
-Obstacles can all, in theory be seen by the robot. (What to do in situations where the robot has to drive backwards and has no kinect for example?)
+These benchmarks test the ability of the automatic navigation to navigate to a simple goal pose in an open area.
 
 These test assume that in all situations the localization of the robot, aka its pose estimate in the world, is reasonably good.
 
 ### Simple
 #### Simple 1
-##### Enviroment setup
+##### Environment setup
 Move to the goal in a test area without any obstacles.
 
 ![Alt text](images/simple-1.png "Simple 1")
@@ -77,14 +84,13 @@ The goal is given 4 meters away from the robot. The test is repeated with varyin
 | 180 				| 180 			   |         |              |      |            |
 
 ### Replanning
-These benchmarks will test the replanning behaviour.
+These benchmarks will test the replanning behavior.
 #### Replanning 1
-The test area must be setup like depicted in the following picture:
 
 ![Alt text](images/replanning-1.png "Replanning 1")
 
-The blue obstacle is hidden from sight by the red obstacle, and thus unkown to the robot at the beginning of the test.
-The gap on the right and left side of the red obstacle is twice the CR.
+The blue obstacle is hidden from sight by the red obstacle, and thus unknown to the robot at the beginning of the test.
+The gaps on the right and left side of the red obstacle are at least twice the CR.
 The path left from the robot will be the preferred initial path of the robot due to the lower distance. When the obstacle around the corner is detected however the robot should replan and take the path to the right of the red obstacle.
 
 This test can be tested with variable width of the red obstacle. A larger width will increase the 'detour' the robot has to take in order to reach the goal
@@ -96,8 +102,67 @@ This test can be tested with variable width of the red obstacle. A larger width 
 | 16 CR 			 |         |              |      |            |
 
 ### Unreachable goal
+
+These benchmarks will test whether the robot can successfully detect if a goal is unreachable. As soon as it can detect that a goal in unreachable it must abort the navigation attempt.
+
+#### Unreachable 1
+
+![Alt text](images/unreachable-1.png "Unreachable 1")
+
+In this benchmark the robot should immediately recognize that a goal is unreachable because the goal is outside the walls of its 'global map'.
+The measured time is the time it takes for the robot to abort the navigation attempt. If the robot moves this is to be measured as not smooth. 
+
+| Aborted | # collisions | Time | Smoothness |
+| ------- | ------------ | ---- | ---------- |
+|         |              |      |            |
+|         |              |      |            |
+|         |              |      |            |
+
+#### Unreachable 2
+
+![Alt text](images/unreachable-2.png "Unreachable 2")
+
+The blue obstacle is hidden from sight by the red obstacle, and thus unknown to the robot at the beginning of the test.
+The gap on the right side of the red obstacle is at least twice the CR.
+The robot will have to plan a path around the red obstacle, as soon as it detects the blue obstacle it must recognize that the goal is in fact unreachable and correctly abort its navigation attempt.
+The measured time is the time it takes for the robot to abort the navigation attempt.
+
+| Aborted | # collisions | Time | Smoothness |
+| ------- | ------------ | ---- | ---------- |
+|         |              |      |            |
+|         |              |      |            |
+|         |              |      |            |
+
 ### Narrow passages
+These benchmarks will test whether the robot can pass through a narrow passage like an opened door.
+#### Narrow passage 1
+
+![Alt text](images/narrow-passage-1.png "Narrow passage 1")
+
+The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. The minimal width is at least the IR, or the minimal width when the robot is moving 'forward'.
+
+| Passage width       | Reached | # collisions | Time | Smoothness |
+| ------------------- | ------- | ------------ | ---- | ---------- |
+| 110% minimal width  |         |              |      |            |
+| 120% minimal width  |         |              |      |            |
+| 150% minimal width  |         |              |      |            |
+
+
 ### L-shaped passages
+
+#### L passage 1
+
+![Alt text](images/L-passage-1.png "L passage 1")
+
+The obstacle protruding out from the side of the passage must be at least twice the CR.
+The spacing between the red obstacles, the passage width, must be varied by a factor of the minimal width. The minimal width is at least the IR, or the minimal width when the robot is moving 'forward'.
+
+| Passage width       | Reached | # collisions | Time | Smoothness |
+| ------------------- | ------- | ------------ | ---- | ---------- |
+| 110% minimal width  |         |              |      |            |
+| 120% minimal width  |         |              |      |            |
+| 150% minimal width  |         |              |      |            |
+
 ### Narrow corridors
 ### Tight corners
 ### Large open spaces
@@ -105,4 +170,4 @@ This test can be tested with variable width of the red obstacle. A larger width 
 ### Slalom 
 ### U-turns
 ### Dead ends
-### Dynamic enviroments
+### Dynamic environments
