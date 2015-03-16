@@ -26,6 +26,7 @@ Grading of the benchmarks
 ## Abbreviations
 * IR - inscribed radius of the robot
 * CR - circumscribed radius of the robot
+* MW - minimal, driving direction, width of the robot
 
 Test Area
 ---------
@@ -91,7 +92,7 @@ These benchmarks will test the replanning behavior.
 
 The blue obstacle is hidden from sight by the red obstacle, and thus unknown to the robot at the beginning of the test.
 The gaps on the right and left side of the red obstacle are at least twice the CR.
-The path left from the robot will be the preferred initial path of the robot due to the lower distance. When the obstacle around the corner is detected however the robot should replan and take the path to the right of the red obstacle.
+The path left from the robot will be the preferred initial path of the robot due to the lower distance. When the obstacle around the corner is detected however the robot should re-plan and take the path to the right of the red obstacle.
 
 This test can be tested with variable width of the red obstacle. A larger width will increase the 'detour' the robot has to take in order to reach the goal
 
@@ -143,12 +144,13 @@ The spacing between the red obstacles, the passage width, must be varied by a fa
 
 | Passage width       | Reached | # collisions | Time | Smoothness |
 | ------------------- | ------- | ------------ | ---- | ---------- |
-| 110% minimal width  |         |              |      |            |
-| 120% minimal width  |         |              |      |            |
 | 150% minimal width  |         |              |      |            |
+| 120% minimal width  |         |              |      |            |
+| 110% minimal width  |         |              |      |            |
 
 
 ### L-shaped passages
+This will test the scenario when there is a door standing open to the side of a narrow passage.
 
 #### L passage 1
 
@@ -159,15 +161,114 @@ The spacing between the red obstacles, the passage width, must be varied by a fa
 
 | Passage width       | Reached | # collisions | Time | Smoothness |
 | ------------------- | ------- | ------------ | ---- | ---------- |
-| 110% minimal width  |         |              |      |            |
-| 120% minimal width  |         |              |      |            |
 | 150% minimal width  |         |              |      |            |
+| 120% minimal width  |         |              |      |            |
+| 110% minimal width  |         |              |      |            |
 
 ### Narrow corridors
+####  Narrow corridor 1
+
+![Alt text](images/narrow-corridor-1.png "Narrow corridor 1")
+
+The length of the passage, the blue obstacles, must be twice the CR.
+The spacing between the blue obstacles, the passage width, must be varied by a factor of the MW.
+
+| Passage width       | Reached | # collisions | Time | Smoothness |
+| ------------------- | ------- | ------------ | ---- | ---------- |
+| 150% MW             |         |              |      |            |
+| 120% MW             |         |              |      |            |
+| 110% MW             |         |              |      |            |
+
 ### Tight corners
+
+#### Tight corner 1
+
+![Alt text](images/tight-corner-1.png "Tight corner 1")
+
+The spacing between the blue obstacles, the passage width, must be varied by a factor of the CR.
+
+| Passage width | Reached | # collisions | Time | Smoothness |
+| ------------- | ------- | ------------ | ---- | ---------- |
+| 150% CR       |         |              |      |            |
+| 120% CR       |         |              |      |            |
+| 110% CR       |         |              |      |            |
+
 ### Large open spaces
+
+#### Large open space 1
+
+![Alt text](images/large-open-space-1.png "Large open space 1")
+
+In this scenario the robot must be unable to see the outer walls of the testing area.
+This can be done artificially by limiting the range of the sensors.
+
+| Goal distance | Reached | # collisions | Time | Smoothness |
+| ------------- | ------- | ------------ | ---- | ---------- |
+| 3 meter       |         |              |      |            |
+| 6 meter       |         |              |      |            |
+| 9 meter       |         |              |      |            |
+
 ### Open space with a single obstacle
+
+#### Single obstacle 1
+
+![Alt text](images/single-obstacle-1.png "Single obstacle 1")
+
+The obstacle in the center of the testing area must have a clearance of 4 times the CR.
+The robot starting position must be 5 times the CR away from the obstacle, and the goal pose must also be 5 times CR on the opposite side.
+
+| Reached | # collisions | Time | Smoothness |
+| ------- | ------------ | ---- | ---------- |
+|         |              |      |            |
+|         |              |      |            |
+|         |              |      |            |
+
 ### Slalom 
+
+#### Slalom 1
+
+![Alt text](images/slalom-1.png "Slalom 1")
+
+The spacing between the obstacles, C, must be 2 times the robots MW.
+The spacing between the obstacles and the walls of the test area must be maximally 0.5*IR.
+The sides of the obstacles in the middle of the path must
+The distance, from the robot start pose to the first obstacle, must be 3 CR.
+The distance, from the goal pose to the last obstacle, must be 3 CR.
+
+| Reached | # collisions | Time | Smoothness |
+| ------- | ------------ | ---- | ---------- |
+|         |              |      |            |
+|         |              |      |            |
+|         |              |      |            |
+
 ### U-turns
-### Dead ends
+
+#### U-turn 1
+
+![Alt text](images/u-turn-1.png "U-turn 1")
+
+The clearance between the red obstacle and the test area walls must be varied.
+The width of the obstacle must be 0.25*IR.
+
+| Clearance | Reached | # collisions | Time | Smoothness |
+| --------- | ------- | ------------ | ---- | ---------- |
+| 4 CR      |         |              |      |            |
+| 2 CR      |         |              |      |            |
+| 1.5 CR    |         |              |      |            |
+
+
 ### Dynamic environments
+
+
+#### Dynamic 1
+
+![Alt text](images/dynamic-1.png "Dynamic 1")
+
+The width of the testing area is 3 times the CR, the length is 10 times the CR.
+The red dynamic obstacle must be added testing area, at the halfway point. The obstacle must be added as soon as the robot is at a distance 'C' from the halfway point.
+
+| C         | Reached | # collisions | Time | Smoothness |
+| --------- | ------- | ------------ | ---- | ---------- |
+| 6 CR      |         |              |      |            |
+| 2 CR      |         |              |      |            |
+| 1 CR      |         |              |      |            |
