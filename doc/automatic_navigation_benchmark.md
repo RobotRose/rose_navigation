@@ -190,6 +190,8 @@ The spacing between the blue obstacles, the passage width, must be varied by a f
 
 ![Alt text](images/tight-corner-1.png "Tight corner 1")
 
+The distance between the start pose and the opening of the blue obstacles must be 2 CR.
+The distance between the opening at the end of the corner and the goal pose must be 2 CR.
 The spacing between the blue obstacles, the passage width, must be varied by a factor of the CR.
 
 | Passage width | Reached | # collisions | Time | Smoothness |
@@ -209,9 +211,9 @@ This can be done artificially by limiting the range of the sensors.
 
 | Goal distance | Reached | # collisions | Time | Smoothness |
 | ------------- | ------- | ------------ | ---- | ---------- |
-| 3 meter       |         |              |      |            |
-| 6 meter       |         |              |      |            |
-| 9 meter       |         |              |      |            |
+| 3 CR          |         |              |      |            |
+| 6 CR          |         |              |      |            |
+| 9 CR          |         |              |      |            |
 
 ### Open space with a single obstacle
 
