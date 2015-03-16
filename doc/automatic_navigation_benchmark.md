@@ -30,15 +30,16 @@ Grading of the benchmarks
 
 Test Area
 ---------
-The test area is an area cordoned off by walls all around. These walls are also present in the 'global map' which the robot is given beforehand.
-The arrow on each picture is the goal pose, a pose is a position combined with a certain orientation. The ground is assumed to be flat and easy for the robot to drive on. Obstacles must all be visible to the sensors of the robot as long positions its sensors correctly, within their specified range. Thus if a certain robot only has a laser scanner for example, all obstacles must be well reflective and of enough height to be detected by the laser scanner.
+The test area is an area cordoned off by walls all around. These walls are also present in the global map, which the robot is given beforehand. Obstacles are not present in the global map. The ground is assumed to be flat and easy for the robot to drive on.
+
+The arrow on each picture is the goal pose, a pose is a position combined with a certain orientation.  
+
+Obstacles must all be visible to the sensors of the robot as long as it positions its sensors correctly, within their specified range. Thus if a certain robot,  for example, only has a laser scanner, all obstacles must be reflective enough and also of enough height to be detected by the laser scanner.
 
 Simple Goal Benchmarks
 ----------
 
 These benchmarks test the ability of the automatic navigation to navigate to a simple goal pose in an open area.
-
-These test assume that in all situations the localization of the robot, aka its pose estimate in the world, is reasonably good.
 
 ### Simple
 #### Simple 1
@@ -48,8 +49,9 @@ Move to the goal in a test area without any obstacles.
 ![Alt text](images/simple-1.png "Simple 1")
 
 Situation with both the robot and the goal at orientation zero degrees.
+The goal is given 4 CR forward from the start pose. 
 
-The goal is given 4 CR forward from the start pose. The test is repeated with varying orientations of the robot start pose and the goal pose.
+The test must be repeated with varying orientations of the robot start pose and the goal pose.
 
 | Orientation Robot | Orientation Goal | Reached | # collisions | Time | Smoothness |
 | ----------------- | ---------------- | ------- | ------------ | ---- | ---------- |
@@ -70,7 +72,9 @@ Move to the goal in a test area with one obstacle extruding from the left side o
 
 Situation with both the robot and the goal at orientation zero degrees. The extrusion obstacle is placed half way from the robot to the goal. The gap on the right side of the testing area is twice the CR.
 
-The goal is given 4 meters away from the robot. The test is repeated with varying orientations of the robot start pose and the goal pose.
+The goal is given 4 CR forward from the robot. 
+
+The test must be repeated with varying orientations of the robot start pose and the goal pose.
 
 | Orientation Robot | Orientation Goal | Reached | # collisions | Time | Smoothness |
 | ----------------- | ---------------- | ------- | ------------ | ---- | ---------- |
@@ -153,7 +157,7 @@ The spacing between the red obstacles, the passage width, must be varied by a fa
 
 
 ### L-shaped passages
-This will test the scenario when there is a door standing open to the side of a narrow passage.
+This test will simulate the scenario when there is a door in an open position to the side of a narrow passage.
 
 #### L passage 1
 
@@ -171,7 +175,9 @@ The spacing between the red obstacles, the passage width, must be varied by a fa
 | 110% MW       |         |              |      |            |
 
 ### Narrow corridors
-####  Narrow corridor 1
+The robot has to be able to navigate trough a small corridor, this situation will be tested in these benchmark tests.
+
+#### Narrow corridor 1
 
 ![Alt text](images/narrow-corridor-1.png "Narrow corridor 1")
 
@@ -185,6 +191,7 @@ The spacing between the blue obstacles, the passage width, must be varied by a f
 | 110% MW             |         |              |      |            |
 
 ### Tight corners
+These test will benchmark the robots ability to navigate through small corridors with a corner in them.
 
 #### Tight corner 1
 
@@ -201,6 +208,7 @@ The spacing between the blue obstacles, the passage width, must be varied by a f
 | 110% CR       |         |              |      |            |
 
 ### Large open spaces
+In large open spaces the robot could potentially lose its ability to localize itself, this scenario will test that case.
 
 #### Large open space 1
 
@@ -216,6 +224,7 @@ This can be done artificially by limiting the range of the sensors.
 | 9 CR          |         |              |      |            |
 
 ### Open space with a single obstacle
+This benchmark test if there is oscillation of the global path. This could casue the robot to become 'indecisive'.
 
 #### Single obstacle 1
 
@@ -230,6 +239,7 @@ The obstacle in the center of the testing area must have a clearance of 4 times 
 |         |              |      |            |
 
 ### Slalom 
+Hallways are sometimes cluttered with obstacles, this scenario will benchmark the robots performance in such a scenario.
 
 #### Slalom 1
 
@@ -246,6 +256,7 @@ The distance, from the goal pose to the last obstacle, must be 3 CR.
 |         |              |      |            |
 
 ### U-turns
+U-turns are sometimes encountered and are therefore also benchmarked.
 
 #### U-turn 1
 
@@ -262,6 +273,7 @@ The width of the obstacle must be 0.25*IR.
 
 
 ### Dynamic environments
+In real life there are many dynamic obstacles. These situations are being recreated in these benchmarks in a structured repeatable manner.
 
 #### Dynamic 1
 
