@@ -423,11 +423,11 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
         return polygons.front();
 
     Paths solution;
-    Clipper clipper;
-    clipper.AddPaths(polygonsToPaths(polygons), ptSubject, true);
+    clipper_.Clear();
+    clipper_.AddPaths(polygonsToPaths(polygons), ptSubject, true);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Get the union
-    clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+    clipper_.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());   
 
     if(solution.size() > 1)
@@ -437,17 +437,17 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     // Make sure all the solution polygons are CCW
-    clipper.Clear();
+    clipper_.Clear();
     bool reversed_a_path = false;
     for(auto path : solution)
     {
-        if(!Orientation(path))
+        if( not Orientation(path) )
         {
             ReversePath(path);
             reversed_a_path = true;
         }
 
-        clipper.AddPath(path, ptSubject, true);
+        clipper_.AddPath(path, ptSubject, true);
     }
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
@@ -456,7 +456,7 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
     {
         ROS_DEBUG_NAMED(ROS_NAME, "Re-unioning polys to fix reversed paths.");
         solution.clear();
-        clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+        clipper_.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     }
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
