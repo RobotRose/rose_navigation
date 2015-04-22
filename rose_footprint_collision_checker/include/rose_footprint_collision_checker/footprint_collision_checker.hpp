@@ -121,6 +121,7 @@ class FootprintCollisionChecker
     bool    show_collissions_;
 
     boost::timer* timer;
+    std::map<std::string, geometry_msgs::PoseStamped> transformations_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 

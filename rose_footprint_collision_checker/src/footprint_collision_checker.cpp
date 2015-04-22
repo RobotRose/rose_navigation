@@ -76,7 +76,6 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
     
     ROS_DEBUG_NAMED(ROS_NAME, "Transforming %d vertices to frame '%s'.", (int)stamped_points.size(), frame_id.c_str());
 
-    std::map<std::string, geometry_msgs::PoseStamped> transformations;
     for(const StampedVertex& stamped_lethal_point : stamped_points)
     {
         std::string in_frame = stamped_lethal_point.header.frame_id;
@@ -87,12 +86,12 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
             geometry_msgs::PoseStamped transformation;
 
 
-            // Do we already have this transform looked-up and stored in the map
-            if(transformations.find(stamped_lethal_point.header.frame_id) != transformations.end())
+            // Do we already have this transform looked-up and stored in the map, and its time is ok
+            if(transformations_.find(stamped_lethal_point.header.frame_id) != transformations_.end() and transformations_.at(stamped_lethal_point.header.frame_id).header.stamp.toSec() - ros::Time::now().toSec() < 0.2) //! @todo OH [CONF]: magic number.
             {
                 // Load the transformation from the map
-                ROS_DEBUG_NAMED(ROS_NAME, "Loading transformation from lethal point in frame '%s' to frame of motion '%s' from transformations map.", in_frame.c_str(), frame_id.c_str());
-                transformation = transformations.at(stamped_lethal_point.header.frame_id);
+                ROS_INFO_NAMED(ROS_NAME, "Loading transformation from lethal point in frame '%s' to frame of motion '%s' from transformations map.", in_frame.c_str(), frame_id.c_str());
+                transformation = transformations_.at(stamped_lethal_point.header.frame_id);
             }
             else
             {
@@ -106,7 +105,7 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
 
                 // Add to map
                 ROS_DEBUG_NAMED(ROS_NAME, "Adding transformation from '%s' -> '%s' to transformations map.", in_frame.c_str(), frame_id.c_str());
-                transformations[stamped_lethal_point.header.frame_id] = transformation;
+                transformations_[stamped_lethal_point.header.frame_id] = transformation;
             }
 
             // Transform to frame_id
@@ -134,25 +133,26 @@ bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, c
 // Return true if a collision does occur
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
-    // ROS_INFO_NAMED(ROS_NAME, "checkTrajectory");
+    ROS_INFO_NAMED(ROS_NAME, "checkTrajectory");
     timer = new boost::timer();
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
     // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
     Polygons swept_polygon_sub_polys = getSweptPolygonSubPolys(trajectory, footprint_);
 
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     bool collides = false;
     StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     for(const auto& sub_polygon : swept_polygon_sub_polys)
     {
         if(collision(sub_polygon, transformed_lethal_points))
@@ -163,15 +163,15 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 
     }
     
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     
     if(collides)
     {
-        // ROS_INFO_NAMED(ROS_NAME, "Collision detected.");
+        ROS_INFO_NAMED(ROS_NAME, "Collision detected.");
         return true;
     }
 
-    // ROS_INFO_NAMED(ROS_NAME, "Collision free travel for complete trajectory.");
+    ROS_INFO_NAMED(ROS_NAME, "Collision free travel for complete trajectory.");
     return false;
 }
 
