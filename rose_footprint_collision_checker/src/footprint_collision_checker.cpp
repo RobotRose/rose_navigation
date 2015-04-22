@@ -144,24 +144,24 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Calculate and publish complete swept polygon
-    // Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
-    Polygons swept_polygon_sub_polys = getSweptPolygonSubPolys(trajectory, footprint_);
+    Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
+    // Polygons swept_polygon_sub_polys = getSweptPolygonSubPolys(trajectory, footprint_);
 
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-    bool collides = false;
     StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);
+    bool collides = collision(swept_polygon, transformed_lethal_points);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    for(const auto& sub_polygon : swept_polygon_sub_polys)
-    {
-        if(collision(sub_polygon, transformed_lethal_points))
-        {
-            collides = true;
-            break;
-        }
+    // for(const auto& sub_polygon : swept_polygon_sub_polys)
+    // {
+    //     if(collision(sub_polygon, transformed_lethal_points))
+    //     {
+    //         collides = true;
+    //         break;
+    //     }
 
-    }
+    // }
     
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     
