@@ -153,7 +153,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     
-    bool collides = collision(sub_polygon, transformed_lethal_points_);
+    bool collides = collision(swept_polygon, transformed_lethal_points_);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // for(const auto& sub_polygon : swept_polygon_sub_polys)
     // {
