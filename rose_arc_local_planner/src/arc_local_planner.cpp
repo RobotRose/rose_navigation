@@ -738,7 +738,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     for(auto it = trajectories.begin(); it != trajectories.end(); ++it)
       elements.push_back(&(*it));
 
-    #pragma omp parallel num_threads(8)
+    #pragma omp parallel num_threads(1)
     {        
         #pragma omp for
         // for (auto it = trajectories.begin(); it != trajectories.end(); ++it)
