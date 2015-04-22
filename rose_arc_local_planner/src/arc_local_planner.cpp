@@ -645,13 +645,15 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     // Set path distance
                     geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
 
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 1, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+                    ROS_INFO("x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     trajectory_end_pose.header.frame_id = plan.begin()->header.frame_id;
                     trajectory_end_pose.pose.position.x = stamped_trajectory_end_point.data.x;
                     trajectory_end_pose.pose.position.y = stamped_trajectory_end_point.data.y;
 
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 2, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10001, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
+                    ROS_INFO("x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
                     
