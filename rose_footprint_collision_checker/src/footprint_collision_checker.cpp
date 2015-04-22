@@ -489,11 +489,11 @@ Path FootprintCollisionChecker::unionPaths(const Paths& paths)
         return paths.front();
 
     Paths solution;
-    clipper_.Clear();
-    clipper_.AddPaths(paths, ptSubject, true);
+    Clipper clipper;
+    clipper.AddPaths(paths, ptSubject, true);
     
     // Get the union
-    clipper_.Execute(ctUnion, solution, pftNonZero, pftNonZero);   
+    clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);   
 
     if(solution.size() > 1)
         ROS_WARN_NAMED(ROS_NAME, "Union solution contains > 1 (%d) paths, continuing with first polygon. Consider a smaller timestep.", (int)solution.size());
@@ -501,7 +501,7 @@ Path FootprintCollisionChecker::unionPaths(const Paths& paths)
     SimplifyPolygon(solution.front(), solution, pftNonZero);
 
     // Make sure all the solution paths are CCW
-    clipper_.Clear();
+    clipper.Clear();
     bool reversed_a_path = false;
     for(auto path : solution)
     {
@@ -511,14 +511,14 @@ Path FootprintCollisionChecker::unionPaths(const Paths& paths)
             reversed_a_path = true;
         }
 
-        clipper_.AddPath(path, ptSubject, true);
+        clipper.AddPath(path, ptSubject, true);
     }
 
     if(reversed_a_path)
     {
         ROS_DEBUG_NAMED(ROS_NAME, "Re-unioning polys to fix reversed paths.");
         solution.clear();
-        clipper_.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+        clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     }
 
     if(solution.size() > 1)

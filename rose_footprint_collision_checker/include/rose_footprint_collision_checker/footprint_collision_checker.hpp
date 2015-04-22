@@ -126,7 +126,6 @@ class FootprintCollisionChecker
     bool    show_collissions_;
 
     boost::timer* timer;
-    Clipper clipper_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 
