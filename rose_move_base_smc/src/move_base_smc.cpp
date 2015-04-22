@@ -22,6 +22,7 @@ MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
 	, sh_platform_controller_alarm_(SharedVariable<bool>("platform_controller_alarm"))
 	, sh_bumper_pressed_(SharedVariable<bool>("bumper_pressed"))
 	, sh_emergency_(SharedVariable<bool>("emergency"))
+	, velocity_watchdog_("move_base_smc_velocity_watchdog", boost::bind(&MoveBaseSMC::CB_cancelAllMovements, this))
 {
 	// Initialize SMC
 	smc_ = new SMC(n_, name_, boost::bind(&MoveBaseSMC::CB_moveBaseGoalReceived, this, _1, _2));
@@ -181,7 +182,7 @@ void MoveBaseSMC::CB_commandVelocity(const geometry_msgs::Twist::ConstPtr& cmd_v
 	sendDriveControllerGoal(*cmd_vel);
 }
 
-void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::Twist::ConstPtr& cmd_vel)	 //! @todo OH: command from moveto operation should have its own action message that combines the goal of a auto nav and a cmd_vel of manual
+void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::TwistStamped::ConstPtr& cmd_vel)	 //! @todo OH: command from moveto operation should have its own action message that combines the goal of a auto nav and a cmd_vel of manual
 {
 	// A manual command velocity overrides the automatic ones.
 	ROS_DEBUG_NAMED(ROS_NAME, "Received a MANUAL command velocity on topic /manual_cmd_vel, forwarding via SMC interface to the drive controller.");
@@ -198,8 +199,13 @@ void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::Twist::ConstPtr&
 	move_base_msgs::MoveBaseResult server_result;
 	smc_->sendServerResult(false, server_result, ros::Duration(SERVER_RESULT_CLIENTS_TIMEOUT)); 
 
+    if ( not velocity_watchdog_.reset(cmd_vel->header) )
+    {
+        ROS_WARN("Received velocity command is too old");
+        return;
+    }
 	// Send the manual command veloctiy that was revceived
-	sendDriveControllerGoal(*cmd_vel);
+	sendDriveControllerGoal(cmd_vel->twist);
 }
 
 void MoveBaseSMC::CB_driveControllerSuccess(const actionlib::SimpleClientGoalState& state, const rose_base_msgs::cmd_velocityResultConstPtr& client_result)
@@ -281,4 +287,29 @@ void MoveBaseSMC::CB_emergency(const bool& new_value)
 		stop();
 		operator_gui.warn("Gestopt met rijden vanwege ingedrukte noodstop.");
 	}
+}
+
+void MoveBaseSMC::CB_cancelAllMovements()
+{
+    velocity_watchdog_.stop();
+
+	// A manual command velocity overrides the automatic ones.
+	ROS_DEBUG_NAMED(ROS_NAME, "Watchdog timeout: Canceling movement.");
+
+	if(smc_->isClientBusy("move_base") || smc_->isClientBusy("relative_positioning") ) //! @todo race condition?
+	{
+		ROS_INFO_NAMED(ROS_NAME, "Manual command velocity received, canceling all goals.");
+		smc_->cancelAllClients();
+	}
+
+	//! @todo OH: waitForFail CB stuff (add to SMC?)
+
+	// Cancel the goal that the server had, if it had one
+	move_base_msgs::MoveBaseResult server_result;
+	smc_->sendServerResult(false, server_result, ros::Duration(SERVER_RESULT_CLIENTS_TIMEOUT)); 
+
+	geometry_msgs::Twist cmd_vel; // Empty twist
+
+	// Send the manual command veloctiy that was received
+	sendDriveControllerGoal(cmd_vel);
 }

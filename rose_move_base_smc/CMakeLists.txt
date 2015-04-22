@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
             rose_relative_positioning
             server_multiple_client
             rose_shared_variables
+            rose_watchdogs
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++0x -g") # TODO OH: -g is DEBUG FLAG
@@ -34,6 +35,7 @@ catkin_package(
     move_base
     rose_relative_positioning
     rose_shared_variables
+    rose_watchdogs
   DEPENDS 
 )
 
