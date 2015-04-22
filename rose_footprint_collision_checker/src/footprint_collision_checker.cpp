@@ -142,27 +142,18 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
-    // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
+
     // Calculate and publish complete swept polygon
-    Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
-    // Polygons swept_polygon_sub_polys = getSweptPolygonSubPolys(trajectory, footprint_);
+    // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
+    Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
 
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    bool collides = collision(swept_polygon, transformed_lethal_points);
+    bool collides = pathCollission(swept_polygon_path, transformed_lethal_points);
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    // for(const auto& sub_polygon : swept_polygon_sub_polys)
-    // {
-    //     if(collision(sub_polygon, transformed_lethal_points))
-    //     {
-    //         collides = true;
-    //         break;
-    //     }
-
-    // }
-    
+      
     
     if(collides)
     {
@@ -199,8 +190,7 @@ void FootprintCollisionChecker::getPoseDistance(const geometry_msgs::PoseStamped
     rotation            = rose_geometry::getShortestSignedAngle(tf::getYaw(pose_a.pose.orientation), tf::getYaw(pose_b.pose.orientation));
 }
 
-Polygon FootprintCollisionChecker::createAABB(  const Polygon& polygon,
-                                                float margin)
+Polygon FootprintCollisionChecker::createAABB( const Polygon& polygon, float margin)
 {
     float minx = 1e6;
     float maxx = -1e6;
@@ -228,24 +218,18 @@ Polygon FootprintCollisionChecker::createAABB(  const Polygon& polygon,
     return bounding_polygon;
 }
 
-bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
-{
-    return (point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y > aabb.at(2).y);
-}
-
-// Optimized?
-bool FootprintCollisionChecker::polyInAABB(const Polygon& polygon, const float& margin, const Vertex& point)
+Polygon FootprintCollisionChecker::createAABB( const Path& path, float margin)
 {
     float minx = 1e6;
     float maxx = -1e6;
     float miny = 1e6;
     float maxy = -1e6;
-    for(const auto& point : polygon)
+    for(const auto& point : path)
     {
-        minx = fmin(point.x, minx);
-        maxx = fmax(point.x, maxx);
-        miny = fmin(point.y, miny);
-        maxy = fmax(point.y, maxy);
+        minx = fmin(point.X, minx);
+        maxx = fmax(point.X, maxx);
+        miny = fmin(point.Y, miny);
+        maxy = fmax(point.Y, maxy);
     }
 
     minx -= margin;
@@ -253,10 +237,45 @@ bool FootprintCollisionChecker::polyInAABB(const Polygon& polygon, const float& 
     miny -= margin;
     maxy += margin;
 
-    return (point.x < maxx and point.x > minx and point.y < maxy and point.y > miny);
+    vector<rose_geometry::Point> bounding_polygon;
+    bounding_polygon.push_back(Vertex(maxx, maxy, 0.0)); 
+    bounding_polygon.push_back(Vertex(minx, maxy, 0.0));
+    bounding_polygon.push_back(Vertex(minx, miny, 0.0));
+    bounding_polygon.push_back(Vertex(maxx, miny, 0.0));
+
+    return bounding_polygon;
 }
 
-bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
+bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
+{
+    return (point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y > aabb.at(2).y);
+}
+
+bool FootprintCollisionChecker::pathCollission(const Path& path, const StampedVertices& stamped_lethal_points)
+{
+    if(stamped_lethal_points.empty())
+        return false;
+
+    int id = 0;
+    // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
+    Polygon aabb = createAABB(path, 0.001);
+    for(const auto& stamped_lethal_point : stamped_lethal_points)
+    {
+        if(show_collissions_)
+            drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
+
+        // if(polyInAABB(polygon, 0.001, stamped_lethal_point.data))
+        if(inAABB(stamped_lethal_point.data, aabb))
+        {
+            if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool FootprintCollisionChecker::polygonCollission(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
 {
     if(stamped_lethal_points.empty())
         return false;
@@ -269,7 +288,6 @@ bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedV
         if(show_collissions_)
             drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
 
-        // if(polyInAABB(polygon, 0.001, stamped_lethal_point.data))
         if(inAABB(stamped_lethal_point.data, aabb))
         {
             Path path = polygonToPath(polygon);

@@ -71,7 +71,8 @@ class FootprintCollisionChecker
     StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);
     bool    checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t);
     bool    checkTrajectory(const Trajectory& trajectory);
-    bool    collision(const Polygon& polygon, const StampedVertices& lethal_points);
+    bool    pathCollission(const Path& path, const StampedVertices& lethal_points);
+    bool    polygonCollission(const Polygon& polygon, const StampedVertices& lethal_points);
     Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt, const float& forward_t, const float& max_distance);
     Polygon getPolygonAtPose( const geometry_msgs::PoseStamped& stamped_pose, 
                                 const std::vector<rose_geometry::Point>& footprint);
@@ -107,8 +108,8 @@ class FootprintCollisionChecker
     void getTrajectoryDistance(const Trajectory& trajectory, float& euclidean_distance, float& rotation);
     void getPoseDistance(const geometry_msgs::PoseStamped& pose_a, const geometry_msgs::PoseStamped& pose_b, float& euclidean_distance, float& rotation);
     Polygon createAABB(const Polygon& polygon, float margin);
+    Polygon createAABB(const Path& path, float margin);
     bool inAABB(const Vertex& point, const Polygon& aabb);
-    bool polyInAABB(const Polygon& polygon, const float& margin, const Vertex& point);
     
     void drawPose(ros::NodeHandle& n, const geometry_msgs::PoseStamped& stamped_pose, int id, float r, float g, float b);
     void publishPolygon(polygon transformed_footprint, std::string frame, std::string name);
