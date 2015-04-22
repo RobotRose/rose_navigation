@@ -157,19 +157,15 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
-    StampedVertices transformed_footprint_;
-    for(const auto& point : footprint_)
-        transformed_footprint_.push_back(rose_geometry::Stamped<Vertex>(frame_of_motion_.header, point));
 
-    transformed_footprint_ = transformPointsToFrame(transformed_footprint_, lethal_points_.front().header.frame_id);
     Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
 
     ROS_INFO("swept_polygon_path.size() = %d | lethal_points_.size() = %d ", (int)swept_polygon_path.size(), (int)lethal_points_.size());
     // publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    // StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
+    StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    bool collides = pathCollission(swept_polygon_path, lethal_points_);
+    bool collides = pathCollission(swept_polygon_path, transformed_lethal_points);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
       
     
