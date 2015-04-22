@@ -103,8 +103,8 @@ void ArcLocalPlanner::initialize(string name, tf::TransformListener* tf_listener
         world_model_ = new ArcLocalPlannerCostmapModel(*costmap_);
 
         costmap_2d::calculateMinAndMaxDistances(costmap_ros_->getRobotFootprint(), inscribed_radius_, circumscribed_radius_);
-        ROS_INFO_NAMED(ROS_NAME, "Calulated inscribed radius    : %.4fm", inscribed_radius_);
-        ROS_INFO_NAMED(ROS_NAME, "Calulated circumscribed radius: %.4fm", circumscribed_radius_);
+        ROS_INFO_NAMED(ROS_NAME, "Calculated inscribed radius    : %.4fm", inscribed_radius_);
+        ROS_INFO_NAMED(ROS_NAME, "Calculated circumscribed radius: %.4fm", circumscribed_radius_);
 
         marker_list_id_         = 0;
         initialized_            = true;
@@ -168,8 +168,8 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
     updateRobotState();
 
     // Transform the global plan to our frame
-    tf_listener_->waitForTransform(global_frame_, robot_base_frame_, ros::Time::now(), ros::Duration(2.0));
-    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, transformed_plan_)) 
+    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(2.0));
+    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
     {
         ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
         return false;
@@ -575,16 +575,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0475;
     float stepsize_dts              = 0.3;
 
-
-    // Transform the global plan to our frame
-    // tf_listener_->waitForTransform(global_frame_, robot_base_frame_, ros::Time::now(), ros::Duration(0.01));
-    vector<PoseStamped> local_transformed_plan;
-    if ( not base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, local_transformed_plan)) 
-    {
-        ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
-        return false;
-    }   
-
     #pragma omp parallel num_threads(8)
     {
         
@@ -634,18 +624,18 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                     // Get the end point of the trajectory in the plan frame.
                     geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
-                    // if( not rose_transformations::transformToLatestFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
-                    // {
-                    //     ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
-                    //     continue;
-                    // }
+                    if( not rose_transformations::transformToLatestFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
+                    {
+                        ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
+                        continue;
+                    }
 
                     // Set path distance
-                    int path_index = getClosestWaypointIndex(trajectory_end_pose, local_transformed_plan);
+                    int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
                     
-                    float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, local_transformed_plan.at(path_index).pose);
-                    float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, local_transformed_plan.at(path_index).pose);
-                    float crow_distance                 = rose_geometry::distanceXY(local_transformed_plan.front().pose, local_transformed_plan.back().pose);
+                    float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
+                    float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
+                    float crow_distance                 = rose_geometry::distanceXY(plan.front().pose, plan.back().pose);
 
                     //! @todo OH [CONF]: 1.5 is a factor that does discard paths that do not gain enough.
                     if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.25 or crow_distance < MIN_ARC_DIST)
