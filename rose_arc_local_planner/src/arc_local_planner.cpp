@@ -643,9 +643,9 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     // Set path distance
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, local_transformed_plan);
                     
-                    float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
-                    float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
-                    float crow_distance                 = rose_geometry::distanceXY(plan.front().pose, plan.back().pose);
+                    float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, local_transformed_plan.at(path_index).pose);
+                    float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, local_transformed_plan.at(path_index).pose);
+                    float crow_distance                 = rose_geometry::distanceXY(local_transformed_plan.front().pose, local_transformed_plan.back().pose);
 
                     //! @todo OH [CONF]: 1.5 is a factor that does discard paths that do not gain enough.
                     if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.25 or crow_distance < MIN_ARC_DIST)
