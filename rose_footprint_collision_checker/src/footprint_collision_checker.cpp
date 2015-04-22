@@ -129,25 +129,25 @@ bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, c
     return checkTrajectory(calculatePoseTrajectory(vel, 0.3, forward_t, max_distance_));
 }
 
-// Return true if a collission does occure
+// Return true if a collision does occur
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
     boost::timer timer;
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
     // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
     // Calculate and publish complete swept polygon
     Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
 
     bool collides = collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id));
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
     
     if(collides)
     {
