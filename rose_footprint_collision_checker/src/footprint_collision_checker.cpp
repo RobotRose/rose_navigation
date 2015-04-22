@@ -315,8 +315,7 @@ Trajectory FootprintCollisionChecker::calculatePoseTrajectory(  const geometry_m
     float at_t          = 0.0;
     float at_distance   = 0.0;
     Trajectory trajectory;
-    // Add current pose
-    trajectory.push_back(moving_pose);
+
     do
     {          
         moving_pose         = rose_geometry::translatePose(moving_pose, translation);
