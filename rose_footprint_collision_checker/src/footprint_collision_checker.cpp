@@ -85,9 +85,8 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
         {
             geometry_msgs::PoseStamped transformation;
 
-
-            // Do we already have this transform looked-up and stored in the map, and its time is ok
-            if(transformations_.find(stamped_lethal_point.header.frame_id) != transformations_.end() and transformations_.at(stamped_lethal_point.header.frame_id).header.stamp.toSec() - ros::Time::now().toSec() < 0.2) //! @todo OH [CONF]: magic number.
+            // Do we already have this transform looked-up and stored in the map
+            if(transformations_.find(stamped_lethal_point.header.frame_id) != transformations_.end()) 
             {
                 // Load the transformation from the map
                 ROS_DEBUG_NAMED(ROS_NAME, "Loading transformation from lethal point in frame '%s' to frame of motion '%s' from transformations map.", in_frame.c_str(), frame_id.c_str());
