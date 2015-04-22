@@ -157,7 +157,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     for(const auto& path : swept_polygon_paths)
     {
         publishPolygon(pathToPolygon(path), frame_of_motion_.header.frame_id, "swept_polygon_sub_path");
-        if(pathCollission(path, transformed_lethal_points)
+        if(pathCollission(path, transformed_lethal_points))
         {
             collides = true;
             break;
