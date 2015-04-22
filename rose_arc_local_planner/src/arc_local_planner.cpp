@@ -558,7 +558,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     thread_safe::vector<geometry_msgs::PoseStamped> simulation_plan;
     thread_safe::vector<TrajectoryScore>            trajectories;
-    std::vector<TrajectoryScore>    valid_trajectories;
+    thread_safe::vector<TrajectoryScore>            valid_trajectories;
     float minx = 1e6;
     float miny = 1e6;
     float maxx = -1e6;
@@ -766,9 +766,10 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     float radius_difference = fabs(current_radius - radiusFromVelocity(trajectory_score.velocity)); 
                     min_radius_diff         = fmin(min_radius_diff, radius_difference);
                     max_radius_diff         = fmax(max_radius_diff, radius_difference);
-
-                    valid_trajectories.push_back(trajectory_score);
                 }
+                
+                valid_trajectories.push_back(trajectory_score);
+
             }
             else
             {
