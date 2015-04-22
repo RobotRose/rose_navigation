@@ -569,13 +569,13 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     float current_radius  = currentRadius();
 
-    int num_tang_velocities         = 1;
-    int num_rot_velocities          = 8;
-    int num_dts                     = 4;
+    int num_tang_velocities         = 3;
+    int num_rot_velocities          = 15;
+    int num_dts                     = 3;
 
-    float stepsize_tang_velocities  = 0.1; //0.05;
-    float stepsize_rot_velocities   = 0.0475*2;//0.0475;
-    float stepsize_dts              = 0.2;
+    float stepsize_tang_velocities  = 0.05;
+    float stepsize_rot_velocities   = 0.0475;
+    float stepsize_dts              = 0.15;
 
     // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
@@ -624,7 +624,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     TrajectoryScore trajectory_score;
                     trajectory_score.velocity   = velocity;
                     // + 0.75 + local_vel_.linear.x*(1.5/0.25)
-                    trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.0, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
+                    trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts/10.0, forward_t + 1.0, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
                     // Get the end point of the trajectory in the plan frame.
                     geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
