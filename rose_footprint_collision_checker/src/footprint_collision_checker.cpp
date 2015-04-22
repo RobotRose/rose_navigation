@@ -143,27 +143,22 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         return true;
     }
 
-    // Path path = new Path();
-    // Path pattern = new Path();
-    // Paths solution = new Paths();
+    Path path = new Path();
+    Path pattern = new Path();
+    Paths solution = new Paths();
      
-    // //Greek capital sigma (sum sign) ... 
-    // Int64[] ints1 = new Int64[] { 300, 400, 100, 400, 200, 300, 100, 200, 300, 200 };
-    // path = IntsToPolygon(ints1);
+    //Trajectory as the path to perform the MinkowskiSum over
+    path = trajectoryToPath(trajectory);
      
-    // //diagonal brush pattern ...
-    // Int64[] ints2 = new Int64[] { 4, -6, 6, -6, -4, 6, -6, 6 };
-    // pattern = IntsToPolygon(ints2);
+    //Footprint as brush pattern ...
+    pattern = polygonToPath(footprint_);
      
-    // solution = Clipper.MinkowskiSum(pattern, path, false);
-    // //move 'pattern' to the end of 'path' ...
-    // pattern = TranslatePath(pattern, 300, 200);
+    solution = Clipper.MinkowskiSum(pattern, path, false);
      
-    //Display solution ± pattern ...
 
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
-    Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
+    Path swept_polygon_path = solution.front(); //getSweptPolygonPath(trajectory, footprint_);
 
     ROS_INFO("swept_polygon_path.size() = %d", (int)swept_polygon_path.size());
     // publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
