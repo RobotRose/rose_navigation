@@ -143,10 +143,10 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         return true;
     }
 
-    Path path = new Path();
-    Path pattern = new Path();
-    Paths solution = new Paths();
-     
+    Path path;
+    Path pattern;
+    Paths solution;
+    
     //Trajectory as the path to perform the MinkowskiSum over
     path = trajectoryToPath(trajectory);
      
