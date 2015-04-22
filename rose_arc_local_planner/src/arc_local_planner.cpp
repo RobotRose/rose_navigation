@@ -579,8 +579,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     #pragma omp parallel
     {
-
-        #pragma omp for
         for(int i = 0; i < num_tang_velocities; i++)
         {
             // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
@@ -609,7 +607,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                 // if(fabs(rotational_velocity) < MIN_VEL_THETA)
                 //  continue;
 
-                #pragma omp for
                 for(int k = 1; k < num_dts; k++)
                 {
                     float forward_t = ((float)k)*stepsize_dts;
