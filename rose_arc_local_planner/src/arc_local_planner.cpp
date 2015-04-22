@@ -579,7 +579,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     // Lookup transform from plan frame to FCC frame of motion "base_link"
     geometry_msgs::PoseStamped transformation;
-    rose_transformations::getLatestFrameInFrame(*tf_listener_, plan.begin()->header.frame_id, FCC_.getFrameOfMotion(), transformation);
+    rose_transformations::getLatestFrameInFrame(*tf_listener_, FCC_.getFrameOfMotion(), plan.begin()->header.frame_id, transformation);
 
     #pragma omp parallel num_threads(1)
     {
@@ -651,14 +651,14 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     // geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
                     trajectory_end_pose = trajectory_score.trajectory.back();
 
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 20000  + i*j*k, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 20000  + i*j*k, trajectory_end_pose.header.frame_id, 1.0, 0.0, 1.0);
                     ROS_INFO("Before   x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     trajectory_end_pose.header.frame_id = plan.begin()->header.frame_id;
                     trajectory_end_pose.pose.position.x = stamped_trajectory_end_point.data.x;
                     trajectory_end_pose.pose.position.y = stamped_trajectory_end_point.data.y;
 
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10001, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 30000 + i*j*k, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
                     ROS_INFO("After    x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
