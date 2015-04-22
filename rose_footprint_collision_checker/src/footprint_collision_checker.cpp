@@ -264,13 +264,14 @@ bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedV
 
     int id = 0;
     // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
-    // Polygon aabb = createAABB(polygon, 0.001);
+    Polygon aabb = createAABB(polygon, 0.001);
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
         if(show_collissions_)
             drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
 
-        if(polyInAABB(polygon, 0.001, stamped_lethal_point.data))
+        // if(polyInAABB(polygon, 0.001, stamped_lethal_point.data))
+        if(inAABB(stamped_lethal_point.data, aabb))
         {
             Path path = polygonToPath(polygon);
             if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
