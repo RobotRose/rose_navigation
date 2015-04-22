@@ -733,31 +733,49 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     // Normalize
     //! @todo OH[IMPR]: Add cost of being close to walls
-    for(auto& trajectory_score : trajectories)
-    { 
-        if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
-        {
-            if(trajectory_score.score < min_dist)
-                min_dist = trajectory_score.score;
 
-            if(trajectory_score.score > max_dist)
-                max_dist = trajectory_score.score;
+    std::vector<TrajectoryScore*> elements; //my_element is whatever is in list
+    for(auto it = trajectories.begin(); it != trajectories.end(); ++it)
+      elements.push_back(&(*it));
 
-            if(trajectory_score.cost < min_cost)
-                min_cost = trajectory_score.cost;
+    #pragma omp parallel num_threads(8)
+    {        
+        #pragma omp for schedule(dynamic,10) 
+        // for (auto it = trajectories.begin(); it != trajectories.end(); ++it)
+        // for(auto& trajectory_score : trajectories)
+        for(size_t i = 0; i < elements.size(); ++i) 
+        { 
+            auto& trajectory_score = *elements[i];
+            if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
+            {
+                #pragma omp critical(shared_variables)
+                {
+                    if(trajectory_score.score < min_dist)
+                        min_dist = trajectory_score.score;
 
-            if(trajectory_score.cost > max_cost)
-                max_cost = trajectory_score.cost;
+                    if(trajectory_score.score > max_dist)
+                        max_dist = trajectory_score.score;
 
-            // Determine minimal and maximal radius difference
-            float radius_difference = fabs(current_radius - radiusFromVelocity(trajectory_score.velocity)); 
-            min_radius_diff         = fmin(min_radius_diff, radius_difference);
-            max_radius_diff         = fmax(max_radius_diff, radius_difference);
+                    if(trajectory_score.cost < min_cost)
+                        min_cost = trajectory_score.cost;
 
-            valid_trajectories.push_back(trajectory_score);
+                    if(trajectory_score.cost > max_cost)
+                        max_cost = trajectory_score.cost;
+                }
+
+                // Determine minimal and maximal radius difference
+                float radius_difference = fabs(current_radius - radiusFromVelocity(trajectory_score.velocity)); 
+                min_radius_diff         = fmin(min_radius_diff, radius_difference);
+                max_radius_diff         = fmax(max_radius_diff, radius_difference);
+
+                #pragma omp critical(shared_variables)
+                {
+                    valid_trajectories.push_back(trajectory_score);
+                }
+            }
+            else
+                collission_fails++;
         }
-        else
-            collission_fails++;
     }
 
     ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
