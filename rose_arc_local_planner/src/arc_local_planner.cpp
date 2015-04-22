@@ -168,7 +168,7 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
     updateRobotState();
 
     // Transform the global plan to our frame
-    tf_listener_->waitForTransform(global_plan_.header.frame_id, robot_base_frame_, ros::Time::now(), ros::Duration(2.0));
+    tf_listener_->waitForTransform(global_frame_, robot_base_frame_, ros::Time::now(), ros::Duration(2.0));
     if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, transformed_plan_)) 
     {
         ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
@@ -577,8 +577,9 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
 
     // Transform the global plan to our frame
-    // tf_listener_->waitForTransform(global_plan_.header.frame_id, robot_base_frame_, ros::Time::now(), ros::Duration(0.01));
-    if ( not base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, transformed_plan_)) 
+    // tf_listener_->waitForTransform(global_frame_, robot_base_frame_, ros::Time::now(), ros::Duration(0.01));
+    vector<PoseStamped> local_transformed_plan;
+    if ( not base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, local_transformed_plan)) 
     {
         ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
         return false;
@@ -632,7 +633,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.5, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
                     // Get the end point of the trajectory in the plan frame.
-                    // geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+                    geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
                     // if( not rose_transformations::transformToLatestFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
                     // {
                     //     ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
