@@ -1095,7 +1095,7 @@ VelCalcResult ArcLocalPlanner::calculateDriveVelocityCommand(Twist& cmd_vel)
     new_cmd_vel     = best_vel;
     float radius    = radiusFromVelocity(best_vel);                     
 
-    //! @todo OH: Limit speeds, collission detection    
+    //! @todo OH: Limit speeds, collision detection    
     ROS_INFO_THROTTLE_NAMED(ALP_INFO_THROTTLE, ROS_NAME, "Driving...");
     cmd_vel = new_cmd_vel;
 
