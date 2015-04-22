@@ -746,8 +746,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         for(size_t i = 0; i < elements.size(); ++i) 
         { 
             auto& trajectory_score = *elements[i];
+
+            ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i, __FILE__, __LINE__, timer.elapsed());
             if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
             {
+                ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i,  __FILE__, __LINE__, timer.elapsed());
                 #pragma omp critical(shared_variables)
                 {
                     if(trajectory_score.score < min_dist)
@@ -769,11 +772,14 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                 
                     valid_trajectories.push_back(trajectory_score);
-                    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+                    ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i, __FILE__, __LINE__, timer.elapsed());
                 }
             }
             else
+            {
+                ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i, __FILE__, __LINE__, timer.elapsed());
                 collission_fails++;
+            }
         }
     }
 
