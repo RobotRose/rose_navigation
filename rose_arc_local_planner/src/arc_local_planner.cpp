@@ -167,13 +167,7 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
     // Update the robot state
     updateRobotState();
 
-    // Transform the global plan to our frame
-    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(2.0));
-    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
-    {
-        ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
-        return false;
-    }   
+       
 
     base_local_planner::publishPlan(global_plan_, g_plan_pub_);
     start_index_ = 0;
@@ -206,6 +200,14 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
     if ( not isInitialized() ) 
     {
         ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner.");
+        return false;
+    }
+
+    // Transform the global plan to our frame
+    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(2.0));
+    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
+    {
+        ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
         return false;
     }
 
@@ -624,11 +626,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                     // Get the end point of the trajectory in the plan frame.
                     geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
-                    if( not rose_transformations::transformToLatestFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
-                    {
-                        ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
-                        continue;
-                    }
+                    // if( not rose_transformations::transformToLatestFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
+                    // {
+                    //     ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
+                    //     continue;
+                    // }
 
                     // Set path distance
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
