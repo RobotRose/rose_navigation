@@ -167,7 +167,13 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
     // Update the robot state
     updateRobotState();
 
-       
+    // Transform the global plan to our frame
+    tf_listener_->waitForTransform(global_plan_.header.frame_id, robot_base_frame_, ros::Time::now(), ros::Duration(2.0));
+    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, transformed_plan_)) 
+    {
+        ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
+        return false;
+    }   
 
     base_local_planner::publishPlan(global_plan_, g_plan_pub_);
     start_index_ = 0;
@@ -200,14 +206,6 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
     if ( not isInitialized() ) 
     {
         ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner.");
-        return false;
-    }
-
-    // Transform the global plan to our frame
-    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(0.05));
-    if ( not base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
-    {
-        ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
         return false;
     }
 
@@ -577,6 +575,15 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0475;
     float stepsize_dts              = 0.3;
 
+
+    // Transform the global plan to our frame
+    // tf_listener_->waitForTransform(global_plan_.header.frame_id, robot_base_frame_, ros::Time::now(), ros::Duration(0.01));
+    if ( not base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, robot_base_frame_, transformed_plan_)) 
+    {
+        ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
+        return false;
+    }   
+
     #pragma omp parallel num_threads(8)
     {
         
@@ -625,7 +632,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.5, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
                     // Get the end point of the trajectory in the plan frame.
-                    geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+                    // geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
                     // if( not rose_transformations::transformToLatestFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
                     // {
                     //     ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
@@ -633,7 +640,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     // }
 
                     // Set path distance
-                    int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
+                    int path_index = getClosestWaypointIndex(trajectory_end_pose, local_transformed_plan);
                     
                     float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
                     float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
