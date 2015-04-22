@@ -20,6 +20,8 @@
 #include <string>
 #include <cmath>
 
+#include <boost/timer/timer.hpp>
+
 //for obstacle data access
 #include <costmap_2d/costmap_2d.h>
 #include <costmap_2d/cost_values.h>
