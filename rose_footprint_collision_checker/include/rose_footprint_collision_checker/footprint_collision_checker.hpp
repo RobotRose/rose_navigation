@@ -122,7 +122,6 @@ class FootprintCollisionChecker
 
     boost::timer* timer;
     std::map<std::string, geometry_msgs::PoseStamped> transformations_;
-    StampedVertices transformed_lethal_points_;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 
