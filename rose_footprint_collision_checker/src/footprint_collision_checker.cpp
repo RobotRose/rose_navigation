@@ -143,22 +143,38 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         return true;
     }
 
+    // Path path;
+    // Path pattern;
+    // Paths solution;
+
+    // //Trajectory as the path to perform the MinkowskiSum over
+    // path = trajectoryToPath(trajectory);
+     
+    // //Footprint as brush pattern ...
+    // pattern = polygonToPath(footprint_);
+     
+    // ClipperLib::MinkowskiSum(pattern, path, solution, false);
+
     Path path;
     Path pattern;
     Paths solution;
-
-    //Trajectory as the path to perform the MinkowskiSum over
-    path = trajectoryToPath(trajectory);
      
-    //Footprint as brush pattern ...
-    pattern = polygonToPath(footprint_);
+    path.push_back(IntPoint((cInt)(3.0*POLYGON_PRECISION), (cInt)(4.0*POLYGON_PRECISION)));
+    path.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(4.0*POLYGON_PRECISION)));
+    path.push_back(IntPoint((cInt)(2.0*POLYGON_PRECISION), (cInt)(3.0*POLYGON_PRECISION)));
+    path.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(2.0*POLYGON_PRECISION)));
+    path.push_back(IntPoint((cInt)(3.0*POLYGON_PRECISION), (cInt)(2.0*POLYGON_PRECISION)));
+     
+    pattern.push_back(IntPoint((cInt)(0.0*POLYGON_PRECISION), (cInt)(0.0*POLYGON_PRECISION)));
+    pattern.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(0.0*POLYGON_PRECISION)));
+    pattern.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(1.0*POLYGON_PRECISION)));
      
     ClipperLib::MinkowskiSum(pattern, path, solution, false);
      
 
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
-    Path swept_polygon_path = solution.front(); //getSweptPolygonPath(trajectory, footprint_);
+    Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_); // solution.front(); 
 
     ROS_INFO("swept_polygon_path.size() = %d", (int)swept_polygon_path.size());
     publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
