@@ -146,14 +146,14 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     Path path;
     Path pattern;
     Paths solution;
-    
+
     //Trajectory as the path to perform the MinkowskiSum over
     path = trajectoryToPath(trajectory);
      
     //Footprint as brush pattern ...
     pattern = polygonToPath(footprint_);
      
-    solution = Clipper.MinkowskiSum(pattern, path, false);
+    ClipperLib::MinkowskiSum(pattern, path, solution, true);
      
 
     // Calculate and publish complete swept polygon
@@ -161,7 +161,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     Path swept_polygon_path = solution.front(); //getSweptPolygonPath(trajectory, footprint_);
 
     ROS_INFO("swept_polygon_path.size() = %d", (int)swept_polygon_path.size());
-    // publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
+    publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
