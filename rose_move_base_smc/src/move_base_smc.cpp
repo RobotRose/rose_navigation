@@ -123,7 +123,7 @@ void MoveBaseSMC::sendDriveControllerGoal(const geometry_msgs::Twist& cmd_vel)
 	rose_base_msgs::cmd_velocityGoal goal;
     goal.cmd_vel = cmd_vel;
     //! @todo OH: if not issue #580
-    smc_->sendGoal<rose_base_msgs::cmd_velocityAction>(goal, "drive_controller", 1.0/10.0);
+    smc_->sendGoal<rose_base_msgs::cmd_velocityAction>(goal, "drive_controller", 1.0/25.0);
 }
 
 void MoveBaseSMC::CB_moveBaseGoalReceived(const move_base_msgs::MoveBaseGoalConstPtr& goal, SMC* smc)

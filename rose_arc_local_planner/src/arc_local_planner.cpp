@@ -27,7 +27,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE       M_PI*(4.0/4.0)
 #define AT_GOAL_DIST            0.05
 #define AT_GOAL_ANGLE           0.10
-#define CMD_VEL_MAF_WINDOW      2   
+#define CMD_VEL_MAF_WINDOW      1  
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
@@ -579,7 +579,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
-    #pragma omp parallel num_threads(20)
+    #pragma omp parallel num_threads(8)
     {
         
         #pragma omp for schedule(dynamic,1) collapse(3)
@@ -738,7 +738,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     for(auto it = trajectories.begin(); it != trajectories.end(); ++it)
       elements.push_back(&(*it));
 
-    #pragma omp parallel num_threads(20)
+    #pragma omp parallel num_threads(8)
     {        
         #pragma omp for
         // for (auto it = trajectories.begin(); it != trajectories.end(); ++it)
