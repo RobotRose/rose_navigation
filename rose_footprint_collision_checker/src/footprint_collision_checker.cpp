@@ -153,7 +153,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     //Footprint as brush pattern ...
     pattern = polygonToPath(footprint_);
      
-    ClipperLib::MinkowskiSum(pattern, path, solution, true);
+    ClipperLib::MinkowskiSum(pattern, path, solution, false);
      
 
     // Calculate and publish complete swept polygon
