@@ -155,7 +155,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
       
     
-    if(collides)
+    if(false)
     {
         // ROS_INFO_NAMED(ROS_NAME, "Collision detected.");
         return true;
