@@ -577,10 +577,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0425;
     float stepsize_dts              = 0.3;
 
-    // Lookup transform from plan frame to FCC frame of motion "base_link"
-    geometry_msgs::PoseStamped transformation;
-    rose_transformations::getLatestFrameInFrame(*tf_listener_, plan.begin()->header.frame_id, FCC_.getFrameOfMotion(), transformation);
-
     #pragma omp parallel num_threads(1)
     {
         
@@ -632,33 +628,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                         ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
                         continue;
                     }
-
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000 + i*j*k, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
-                    ROS_INFO("Original x: %4.4f y: %4.4f yaw: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, tf::getYaw(trajectory_end_pose.pose.orientation), trajectory_end_pose.header.frame_id.c_str());
-
-
-                    trajectory_end_pose = trajectory_score.trajectory.back();
-
-                    // Transform to frame_id
-                    rose_geometry::Point trajectory_end_point(trajectory_end_pose.pose.position);
-
-                    rose_geometry::Stamped<rose_geometry::Point> stamped_trajectory_end_point(trajectory_end_pose.header, trajectory_end_point);
-                    
-                    stamped_trajectory_end_point.header.frame_id = plan.begin()->header.frame_id;
-
-                    rose_geometry::translatePoint(-transformation.pose.position.x, -transformation.pose.position.y, stamped_trajectory_end_point.data);
-                    rose_geometry::rotatePointAroundOrigin(stamped_trajectory_end_point.data, -tf::getYaw(trajectory_end_pose.pose.orientation));
-
-
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 20000  + i*j*k, trajectory_end_pose.header.frame_id, 1.0, 0.0, 1.0);
-                    ROS_INFO("Before   x: %4.4f y: %4.4f yaw: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, tf::getYaw(trajectory_end_pose.pose.orientation), trajectory_end_pose.header.frame_id.c_str());
-
-                    trajectory_end_pose.header.frame_id = plan.begin()->header.frame_id;
-                    trajectory_end_pose.pose.position.x = stamped_trajectory_end_point.data.x;
-                    trajectory_end_pose.pose.position.y = stamped_trajectory_end_point.data.y;
-
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 30000 + i*j*k, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
-                    ROS_INFO("After    x: %4.4f y: %4.4f yaw: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, tf::getYaw(trajectory_end_pose.pose.orientation), trajectory_end_pose.header.frame_id.c_str());
 
                     // Set path distance
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
