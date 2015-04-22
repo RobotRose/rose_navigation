@@ -595,7 +595,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         //For now do not allow stopped or backward velocities
         if(tangential_velocity <= 0)
             continue;
-        
+
+        #pragma omp for
         for(int j = 0; j < num_rot_velocities; j++)
         {
             // local_vel_.angular.z
@@ -652,8 +653,10 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     simulation_plan.push_back(stamped_pose);
                 }
                 
-
-                trajectories.push_back(trajectory_score);
+                #pragma omp critical(dataupdate)
+                {
+                    trajectories.push_back(trajectory_score);
+                }
             }
         }
     }
