@@ -577,86 +577,93 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0425;
     float stepsize_dts              = 0.3;
 
-    #pragma omp for
-    for(int i = 0; i < num_tang_velocities; i++)
+    #pragma omp parallel
     {
-        // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
-        float tangential_velocity = MIN_VEL_ABS_DRIVE + ((float)i)*stepsize_tang_velocities;
 
-        // Comply to minimal/maximal velocity
-        if(tangential_velocity < 0)
-                tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
-                                                  , tangential_velocity)
-                                        , -MAX_VEL_DRIVE);
-        else
-                tangential_velocity = fmin( fmax(   MIN_VEL_ABS_DRIVE
-                                                  , tangential_velocity)
-                                        , MAX_VEL_DRIVE);           
-
-        //For now do not allow stopped or backward velocities
-        if(tangential_velocity <= 0)
-            continue;
-
-        for(int j = 0; j < num_rot_velocities; j++)
+        #pragma omp for
+        for(int i = 0; i < num_tang_velocities; i++)
         {
-            // local_vel_.angular.z
-            float rotational_velocity =  -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + ((float)j)*stepsize_rot_velocities;
+            // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
+            float tangential_velocity = MIN_VEL_ABS_DRIVE + ((float)i)*stepsize_tang_velocities;
 
-            // if(fabs(rotational_velocity) < MIN_VEL_THETA)
-            //  continue;
+            // Comply to minimal/maximal velocity
+            if(tangential_velocity < 0)
+                    tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
+                                                      , tangential_velocity)
+                                            , -MAX_VEL_DRIVE);
+            else
+                    tangential_velocity = fmin( fmax(   MIN_VEL_ABS_DRIVE
+                                                      , tangential_velocity)
+                                            , MAX_VEL_DRIVE);           
 
-            for(int k = 1; k < num_dts; k++)
+            //For now do not allow stopped or backward velocities
+            if(tangential_velocity <= 0)
+                continue;
+
+            #pragma omp for
+            for(int j = 0; j < num_rot_velocities; j++)
             {
-                float forward_t = ((float)k)*stepsize_dts;
+                // local_vel_.angular.z
+                float rotational_velocity =  -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + ((float)j)*stepsize_rot_velocities;
 
-                Twist velocity;
-                velocity.linear.x   = tangential_velocity;
-                velocity.angular.z  = rotational_velocity;
+                // if(fabs(rotational_velocity) < MIN_VEL_THETA)
+                //  continue;
 
-                TrajectoryScore trajectory_score;
-                trajectory_score.velocity   = velocity;
-                // + 0.75 + local_vel_.linear.x*(1.5/0.25)
-                trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.5, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
-
-                // Get the end point of the trajectory in the plan frame.
-                geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
-                if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
+                #pragma omp for
+                for(int k = 1; k < num_dts; k++)
                 {
-                    ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
-                    continue;
-                }
+                    float forward_t = ((float)k)*stepsize_dts;
 
-                // Set path distance
-                int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
-                
-                float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
-                float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
-                float crow_distance                 = rose_geometry::distanceXY(plan.front().pose, plan.back().pose);
+                    Twist velocity;
+                    velocity.linear.x   = tangential_velocity;
+                    velocity.angular.z  = rotational_velocity;
 
-                //! @todo OH [CONF]: 1.5 is a factor that does discard paths that do not gain enough.
-                if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.25 or crow_distance < MIN_ARC_DIST)
-                {
-                    distance_fails++;
-                    continue;
-                }
-                trajectory_score.score  = path_index;
-                trajectory_score.cost   = 1.0/end_point_distance_to_path;
+                    TrajectoryScore trajectory_score;
+                    trajectory_score.velocity   = velocity;
+                    // + 0.75 + local_vel_.linear.x*(1.5/0.25)
+                    trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.5, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
-                // Visualize cmd_vels       
-                PoseStamped stamped_pose;
-                stamped_pose.header.stamp       = ros::Time::now();
-                stamped_pose.header.frame_id    = "base_link";
-                for(const auto& trajectory_pose : trajectory_score.trajectory)
-                {                   
-                    stamped_pose.pose.position.x    = trajectory_pose.pose.position.x;
-                    stamped_pose.pose.position.y    = trajectory_pose.pose.position.y;
-                    simulation_plan.push_back(stamped_pose);
+                    // Get the end point of the trajectory in the plan frame.
+                    geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+                    if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
+                    {
+                        ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
+                        continue;
+                    }
+
+                    // Set path distance
+                    int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
+                    
+                    float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
+                    float robot_distance_to_path        = rose_geometry::distanceXY(global_pose_.pose, plan.at(path_index).pose);
+                    float crow_distance                 = rose_geometry::distanceXY(plan.front().pose, plan.back().pose);
+
+                    //! @todo OH [CONF]: 1.5 is a factor that does discard paths that do not gain enough.
+                    if( path_index == 0 or end_point_distance_to_path > robot_distance_to_path * 1.25 or crow_distance < MIN_ARC_DIST)
+                    {
+                        distance_fails++;
+                        continue;
+                    }
+                    trajectory_score.score  = path_index;
+                    trajectory_score.cost   = 1.0/end_point_distance_to_path;
+
+                    // Visualize cmd_vels       
+                    PoseStamped stamped_pose;
+                    stamped_pose.header.stamp       = ros::Time::now();
+                    stamped_pose.header.frame_id    = "base_link";
+                    for(const auto& trajectory_pose : trajectory_score.trajectory)
+                    {                   
+                        stamped_pose.pose.position.x    = trajectory_pose.pose.position.x;
+                        stamped_pose.pose.position.y    = trajectory_pose.pose.position.y;
+                        simulation_plan.push_back(stamped_pose);
+                    }
+                    
+                    trajectories.push_back(trajectory_score);
                 }
-                
-                trajectories.push_back(trajectory_score);
             }
+
         }
-    }
+    }   // Parallel section end
 
     // Threadsafe requires this
     Trajectory sim_copy;
