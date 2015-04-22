@@ -151,7 +151,7 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
     }
     else
     {
-        ROS_INFO_NAMED(ROS_NAME, "New global plan recevied, the plan contains %lu points. Resetting the local planner state machine.", plan.size());    
+        ROS_INFO_NAMED(ROS_NAME, "New global plan received, the plan contains %lu points. Resetting the local planner state machine.", plan.size());    
         prev_state_     = DRIVE; 
         state_          = DRIVE;
     }   
@@ -916,7 +916,7 @@ bool ArcLocalPlanner::trajectoryCollidesWithPoints( TrajectoryFootprint& traject
         if(c)
         {
             // drawPoint(lethal_point.x, lethal_point.y, i, "map", 1.0, 0.0, 0.0);
-            ROS_DEBUG_NAMED(ROS_NAME, "POLY, collission found.");
+            ROS_DEBUG_NAMED(ROS_NAME, "POLY, collision found.");
             collission  = true;
             cost        = 0.0;
             break;
@@ -930,7 +930,7 @@ bool ArcLocalPlanner::trajectoryCollidesWithPoints( TrajectoryFootprint& traject
 
     if(!collission)
     {
-        ROS_DEBUG_NAMED(ROS_NAME, "No collissions found, carry on soldier, average cost: %.3f", cost);
+        ROS_DEBUG_NAMED(ROS_NAME, "No collisions found, carry on soldier, average cost: %.3f", cost);
     }
 
     return collission;
@@ -1360,7 +1360,7 @@ rose_geometry::Point ArcLocalPlanner::findFootprintSteepestDescent( const Pose& 
         auto below_nb = footprint_cells_multimap_.find(make_pair(cell.x - 1, cell.y));
         if(right_nb != footprint_cells_multimap_.end())
         {
-            // Has right neighbourgh
+            // Has right neighbor
             // ROS_DEBUG_NAMED(ROS_NAME, "findFootprintSteepestDescent: Self: %d RNB: %d", current_cell_cost->second, right_nb->second);
             if(right_nb->second < current_cell_cost->second)
                 dy--;
@@ -1369,7 +1369,7 @@ rose_geometry::Point ArcLocalPlanner::findFootprintSteepestDescent( const Pose& 
         }
         if(below_nb != footprint_cells_multimap_.end())
         {
-            // Has below neighbourgh
+            // Has below neighbor
             // ROS_DEBUG_NAMED(ROS_NAME, "findFootprintSteepestDescent: Self: %d BNB: %d", current_cell_cost->second, below_nb->second);
             if(below_nb->second < current_cell_cost->second)
                 dx--;
