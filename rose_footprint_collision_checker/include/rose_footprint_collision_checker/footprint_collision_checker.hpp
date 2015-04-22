@@ -64,6 +64,7 @@ class FootprintCollisionChecker
     ~FootprintCollisionChecker();
 
     bool    setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint);
+    std::string getFrameOfMotion();
     bool    addPoints(const StampedVertices& new_lethal_points);
     bool    clearPoints();
     StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);

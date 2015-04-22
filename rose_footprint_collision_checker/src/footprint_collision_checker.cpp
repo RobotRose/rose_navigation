@@ -34,6 +34,11 @@ bool FootprintCollisionChecker::setFootprint(const geometry_msgs::PoseStamped& f
     return true;
 }
 
+std::string FootprintCollisionChecker::getFrameOfMotion()
+{
+    return frame_of_motion_.header.frame_id;
+}
+
 bool FootprintCollisionChecker::addPoints(const StampedVertices& new_lethal_points)
 {
     // This lock is needed because the getFrameInFrame contains a tf_listener which has a asynchronous spinner thread, then if 
