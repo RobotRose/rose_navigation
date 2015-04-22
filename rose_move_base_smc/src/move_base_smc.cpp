@@ -201,7 +201,7 @@ void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::TwistStamped::Co
 
     if ( not velocity_watchdog_.reset(cmd_vel->header) )
     {
-        ROS_WARN("Received velocity command is too old");
+        ROS_WARN("Received velocity command is too old.");
         return;
     }
 	// Send the manual command veloctiy that was revceived
@@ -210,7 +210,7 @@ void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::TwistStamped::Co
 
 void MoveBaseSMC::CB_driveControllerSuccess(const actionlib::SimpleClientGoalState& state, const rose_base_msgs::cmd_velocityResultConstPtr& client_result)
 {
-	ROS_DEBUG_NAMED(ROS_NAME, "Command velocity succesfully forwarded from /cmd_vel to drive controller SMC interface.");
+	ROS_DEBUG_NAMED(ROS_NAME, "Command velocity successfully forwarded from /cmd_vel to drive controller SMC interface.");
 }
 
 void MoveBaseSMC::CB_driveControllerFail(const actionlib::SimpleClientGoalState& state, const rose_base_msgs::cmd_velocityResultConstPtr& client_result)

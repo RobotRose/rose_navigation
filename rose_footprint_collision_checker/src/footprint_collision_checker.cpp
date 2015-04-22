@@ -124,10 +124,10 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
     return transformed_stamped_points;
 }
 
-// Return true if a collission does occure within forward_t
+// Return true if a collision does occur within forward_t
 bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t)
 {
-    return checkTrajectory(calculatePoseTrajectory(vel, 0.3, forward_t, max_distance_));
+    return checkTrajectory(calculatePoseTrajectory(vel, 0.2, forward_t, max_distance_));
 }
 
 // Return true if a collision does occur
@@ -150,7 +150,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-    StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);
+    StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
     bool collides = collision(swept_polygon, transformed_lethal_points);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // for(const auto& sub_polygon : swept_polygon_sub_polys)
