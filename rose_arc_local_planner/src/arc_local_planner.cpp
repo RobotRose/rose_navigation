@@ -205,7 +205,7 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 {   
     if ( not isInitialized() ) 
     {
-        ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
+        ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner.");
         return false;
     }
 

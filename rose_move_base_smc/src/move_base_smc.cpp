@@ -94,7 +94,7 @@ void MoveBaseSMC::sendGoal(const move_base_msgs::MoveBaseGoal& goal_to_send)
 	{
 		ROS_INFO_NAMED(ROS_NAME, "Received goal in '%s' frame, sending goal to move_base node.", goal_to_send.target_pose.header.frame_id.c_str());
 		
-		// Could be that the previous goal was a relative goal therfore cancel the relative_positioning, if it did not had a goal notthing happens
+		// Could be that the previous goal was a relative goal therefore cancel the relative_positioning, if it did not had a goal notthing happens
 		smc_->cancelClient("relative_positioning");
 
 		move_base_msgs::MoveBaseGoal move_base_goal;
@@ -106,7 +106,7 @@ void MoveBaseSMC::sendGoal(const move_base_msgs::MoveBaseGoal& goal_to_send)
 	{
 		ROS_INFO_NAMED(ROS_NAME, "Received goal in '%s' frame, sending goal to relative_positioning node.", goal_to_send.target_pose.header.frame_id.c_str());
 		
-		// Could be that the previous goal was a relative goal therfore cancel the move_base, if it did not had a goal notthing happens
+		// Could be that the previous goal was a relative goal therefore cancel the move_base, if it did not had a goal notthing happens
 		smc_->cancelClient("move_base");
 
 		rose_relative_positioning::relative_positioningGoal relative_positioning_goal;
@@ -123,7 +123,7 @@ void MoveBaseSMC::sendDriveControllerGoal(const geometry_msgs::Twist& cmd_vel)
 	rose_base_msgs::cmd_velocityGoal goal;
     goal.cmd_vel = cmd_vel;
     //! @todo OH: if not issue #580
-    smc_->sendGoal<rose_base_msgs::cmd_velocityAction>(goal, "drive_controller", 1.0/25.0);
+    smc_->sendGoal<rose_base_msgs::cmd_velocityAction>(goal, "drive_controller", 1.0/10.0);
 }
 
 void MoveBaseSMC::CB_moveBaseGoalReceived(const move_base_msgs::MoveBaseGoalConstPtr& goal, SMC* smc)
