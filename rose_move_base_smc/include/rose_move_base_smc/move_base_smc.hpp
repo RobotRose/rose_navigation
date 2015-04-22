@@ -27,7 +27,10 @@
 #include "rose_relative_positioning/relative_positioningActionResult.h"
 #include "rose_relative_positioning/relative_positioningActionFeedback.h"
 
+#include "rose_watchdogs/watchdog.hpp"
+
 #define SERVER_RESULT_CLIENTS_TIMEOUT 	0.5
+#define VELOCITY_TIMEOUT 				0.5
 
 using namespace std; 
 using namespace rose_shared_variables;
@@ -61,7 +64,7 @@ class MoveBaseSMC
 
 	void CB_commandVelocity(		const geometry_msgs::Twist::ConstPtr& cmd_vel);
 
-	void CB_manualCommandVelocity(	const geometry_msgs::Twist::ConstPtr& cmd_vel);
+	void CB_manualCommandVelocity(	const geometry_msgs::TwistStamped::ConstPtr& cmd_vel);
 
 	void CB_driveControllerSuccess(	const actionlib::SimpleClientGoalState& state, 
 									const rose_base_msgs::cmd_velocityResultConstPtr& client_result);
@@ -81,6 +84,8 @@ class MoveBaseSMC
 	void CB_bumper_pressed(const bool& new_value);
 	void CB_emergency(const bool& new_value);
 
+	void CB_cancelAllMovements();
+
 	// Variables
   	ros::NodeHandle n_;
   	string 			name_;
@@ -99,6 +104,8 @@ class MoveBaseSMC
     SharedVariable<bool>            sh_bumper_pressed_;
     SharedVariable<bool>            sh_emergency_;
     OperatorMessaging      			operator_gui;
+
+    rose::Watchdog                  velocity_watchdog_;
 };
 
 #endif // MOVE_BASE_SMC_HPP
