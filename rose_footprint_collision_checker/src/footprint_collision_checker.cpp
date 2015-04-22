@@ -416,27 +416,28 @@ Polygons FootprintCollisionChecker::getSweptPolygonSubPolys(const Trajectory& fr
     return swept_polygon_sub_polys;
 }
 
-Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
+Path FootprintCollisionChecker::unionPaths(const Paths& paths)
 {
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    if(polygons.size() == 1)
-        return polygons.front();
+    if(paths.size() == 1)
+        return paths.front();
 
     Paths solution;
     clipper_.Clear();
-    clipper_.AddPaths(polygonsToPaths(polygons), ptSubject, true);
+    clipper_.AddPaths(paths, ptSubject, true);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    
     // Get the union
     clipper_.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());   
 
     if(solution.size() > 1)
-        ROS_WARN_NAMED(ROS_NAME, "Union solution contains > 1 (%d) polygons, continuing with first polygon. Consider a smaller timestep.", (int)solution.size());
+        ROS_WARN_NAMED(ROS_NAME, "Union solution contains > 1 (%d) paths, continuing with first polygon. Consider a smaller timestep.", (int)solution.size());
 
     SimplifyPolygon(solution.front(), solution, pftNonZero);
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-    // Make sure all the solution polygons are CCW
+    // Make sure all the solution paths are CCW
     clipper_.Clear();
     bool reversed_a_path = false;
     for(auto path : solution)
@@ -451,22 +452,22 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
     }
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-
     if(reversed_a_path)
     {
         ROS_DEBUG_NAMED(ROS_NAME, "Re-unioning polys to fix reversed paths.");
         solution.clear();
         clipper_.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     }
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-    Polygons unioned_polygons = pathsToPolygons(solution);
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    if(solution.size() > 1)
+        ROS_WARN_NAMED(ROS_NAME, "solution contains > 1 (%d) polygons, returning first polygon. Consider a smaller timestep.", (int)solution.size());
 
-    if(unioned_polygons.size() > 1)
-        ROS_WARN_NAMED(ROS_NAME, "unioned_polygons contains > 1 (%d) polygons, returning first polygon. Consider a smaller timestep.", (int)unioned_polygons.size());
+    return solution.front();
+}
 
-    return unioned_polygons.front();
+Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
+{
+    return pathToPolygon(unionPaths(polygonsToPaths(polygons)));
 }
 
 Path FootprintCollisionChecker::polygonToPath(const Polygon& polygon)

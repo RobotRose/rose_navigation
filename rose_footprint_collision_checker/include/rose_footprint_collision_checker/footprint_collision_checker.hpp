@@ -95,6 +95,7 @@ class FootprintCollisionChecker
 
     Polygon         getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
     Polygons        getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Path            unionPaths(const Paths& paths);
     Polygon         unionPolygons(const Polygons& polygons);
     Path            polygonToPath(const Polygon& polygon);
     Paths           polygonsToPaths(const Polygons& polygons);
