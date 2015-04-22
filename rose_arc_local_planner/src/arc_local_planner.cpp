@@ -1241,7 +1241,7 @@ VelCalcResult ArcLocalPlanner::calculateStrafeVelocityCommand(Twist& cmd_vel)
     rose_geometry::limitVectorLengthXY(&new_cmd_vel.linear.x, &new_cmd_vel.linear.y, MAX_VEL_ABS);
     rose_geometry::rotateVect(&new_cmd_vel.linear.x, &new_cmd_vel.linear.y, -tf::getYaw(global_pose_.pose.orientation));
 
-    ROS_DEBUG_NAMED(ROS_NAME, "Strafeing...");
+    ROS_DEBUG_NAMED(ROS_NAME, "Strafing...");
     cmd_vel = new_cmd_vel;
 
     return BUSY;
