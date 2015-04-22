@@ -134,6 +134,7 @@ bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, c
 // Return true if a collision does occur
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
+    timer = new boost::timer();
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     if(footprint_.size() <= 2)
     {
@@ -144,6 +145,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Calculate and publish complete swept polygon
     Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
+    
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
@@ -224,13 +226,16 @@ bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
 
 bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
 {
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     if(stamped_lethal_points.empty())
         return false;
 
     Path path = polygonToPath(polygon);
     int id = 0;
     // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     Polygon aabb = createAABB(polygon, 0.001);
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
         if(show_collissions_)
@@ -301,11 +306,22 @@ Polygon FootprintCollisionChecker::getPolygonAtPose(const geometry_msgs::PoseSta
 
 Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
 {
-    timer = new boost::timer();
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-    // Create a list of polygon's that will have to be unioned together later
-    Polygons to_be_unioned_polygons;
+    // Union all polygons in the to be union-ed polygons list
+    Polygon unioned_polygon = unionPolygons(getSweptPolygonSubPolys(frame_of_motion_trajectory, polygon));
+
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    // Return the swept polygon
+    return unioned_polygon;
+}
+
+Polygons FootprintCollisionChecker::getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+{
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+
+    // Create a list of polygon's that will have to be union ed together later
+    Polygons swept_polygon_sub_polys;
 
     // Create a map to hold the path traced by all vertices in the polygon
     int vertex_path_id = 0;
@@ -319,7 +335,7 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
         Polygon polygon_at_pose = getPolygonAtPose(stamped_pose, polygon);
         
         // Add this pose to the to be unioned polygons list
-        to_be_unioned_polygons.push_back(polygon_at_pose);
+        swept_polygon_sub_polys.push_back(polygon_at_pose);
 
         // Add the vertexes of the polygon, at this pose of the trajectory, to their corresponding vertex path
         vertex_path_id = 0;
@@ -355,19 +371,14 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
 
         for(const auto& polygon : simplified_vertex_path_polygons)
         {
-            // Add the vertex path to the to be unioned polygons list
-            to_be_unioned_polygons.push_back(polygon);
+            // Add the vertex path to the to be union-ed polygons list
+            swept_polygon_sub_polys.push_back(polygon);
 
         }
     }
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
-    // Union all polygons in the to be union-ed polygons list
-    Polygon unioned_polygon = unionPolygons(to_be_unioned_polygons);
-
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-    // Return the swept polygon
-    return unioned_polygon;
+    return swept_polygon_sub_polys;
 }
 
 Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
