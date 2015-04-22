@@ -581,7 +581,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     geometry_msgs::PoseStamped transformation;
     rose_transformations::getLatestFrameInFrame(*tf_listener_, plan.begin()->header.frame_id, FCC_.getFrameOfMotion(), transformation);
 
-    #pragma omp parallel num_threads(8)
+    #pragma omp parallel num_threads(1)
     {
         
         for(int i = 0; i < num_tang_velocities; ++i)
@@ -633,7 +633,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                         continue;
                     }
 
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000 + i*j*k, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
                     ROS_INFO("Original x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
 
@@ -651,7 +651,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     // geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
                     trajectory_end_pose = trajectory_score.trajectory.back();
 
-                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 20000  + i*j*k, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
                     ROS_INFO("Before   x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     trajectory_end_pose.header.frame_id = plan.begin()->header.frame_id;
