@@ -300,6 +300,9 @@ Polygon FootprintCollisionChecker::getPolygonAtPose(const geometry_msgs::PoseSta
 
 Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
 {
+    boost::timer timer;
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+
     // Create a list of polygon's that will have to be unioned together later
     Polygons to_be_unioned_polygons;
 
@@ -322,6 +325,7 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
         for(const Vertex& vertex : polygon_at_pose)
             vertex_paths[vertex_path_id++].push_back(vertex); 
     }
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
 
     // For each vertex path, append the vertex path of the next vertex in the original polygon, in reverse
     for(vertex_path_id = 0; vertex_path_id < polygon.size() ; vertex_path_id++)
@@ -355,10 +359,12 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
 
         }
     }
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
 
     // Union all polygons in the to be unioned polygons list
     Polygon unioned_polygon = unionPolygons(to_be_unioned_polygons);
 
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
     // Return the swept polygon
     return unioned_polygon;
 }
