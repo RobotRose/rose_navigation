@@ -734,7 +734,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     // Normalize
     //! @todo OH[IMPR]: Add cost of being close to walls
 
-    std::vector<TrajectoryScore*> elements;
+    thread_safe::vector<TrajectoryScore*> elements;
     for(auto it = trajectories.begin(); it != trajectories.end(); ++it)
       elements.push_back(&(*it));
 
@@ -745,7 +745,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         // for(auto& trajectory_score : trajectories)
         for(size_t i = 0; i < elements.size(); ++i) 
         { 
-            auto& trajectory_score = *elements[i];
+            auto& trajectory_score = *(elements.at(i));
             if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
             {
                 #pragma omp critical(shared_variables)
