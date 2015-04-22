@@ -152,9 +152,10 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     bool collides = false;
+    StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);
     for(const auto& sub_polygon : swept_polygon_sub_polys)
     {
-        if(collision(sub_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
+        if(collision(sub_polygon, transformed_lethal_points))
         {
             collides = true;
             break;
