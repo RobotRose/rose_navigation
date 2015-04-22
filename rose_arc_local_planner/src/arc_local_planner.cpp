@@ -599,7 +599,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
             if(tangential_velocity <= 0)
                 continue;
 
-            #pragma omp parallel for schedule(dynamic,1)
+            #pragma omp for schedule(dynamic,1)
             for(int j = 0; j < num_rot_velocities; ++j)
             {
                 // local_vel_.angular.z
