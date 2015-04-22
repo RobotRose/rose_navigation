@@ -599,17 +599,18 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
             if(tangential_velocity <= 0)
                 continue;
 
-            #pragma omp for schedule(dynamic,1)
+            #pragma omp for schedule(dynamic,1) collapse(2)
             for(int j = 0; j < num_rot_velocities; ++j)
             {
                 // local_vel_.angular.z
-                float rotational_velocity =  -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + ((float)j)*stepsize_rot_velocities;
+                
 
                 // if(fabs(rotational_velocity) < MIN_VEL_THETA)
                 //  continue;
 
                 for(int k = 1; k < num_dts; ++k)
                 {
+                    float rotational_velocity =  -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + ((float)j)*stepsize_rot_velocities;
                     float forward_t = ((float)k)*stepsize_dts;
 
                     Twist velocity;
