@@ -237,16 +237,13 @@ bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
 
 bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
 {
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     if(stamped_lethal_points.empty())
         return false;
 
     Path path = polygonToPath(polygon);
     int id = 0;
     // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     Polygon aabb = createAABB(polygon, 0.001);
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
         if(show_collissions_)
