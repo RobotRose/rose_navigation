@@ -580,26 +580,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     #pragma omp parallel num_threads(1)
     {
         
+        #pragma omp for schedule(dynamic,1) collapse(3)
         for(int i = 0; i < num_tang_velocities; ++i)
         {
-            // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
-            float tangential_velocity = MIN_VEL_ABS_DRIVE + ((float)i)*stepsize_tang_velocities;
+            
 
-            // Comply to minimal/maximal velocity
-            if(tangential_velocity < 0)
-                    tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
-                                                      , tangential_velocity)
-                                            , -MAX_VEL_DRIVE);
-            else
-                    tangential_velocity = fmin( fmax(   MIN_VEL_ABS_DRIVE
-                                                      , tangential_velocity)
-                                            , MAX_VEL_DRIVE);           
-
-            //For now do not allow stopped or backward velocities
-            if(tangential_velocity <= 0)
-                continue;
-
-            #pragma omp for schedule(dynamic,1) collapse(2)
             for(int j = 0; j < num_rot_velocities; ++j)
             {
                 // local_vel_.angular.z
@@ -610,6 +595,23 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                 for(int k = 1; k < num_dts; ++k)
                 {
+                    // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
+                    float tangential_velocity = MIN_VEL_ABS_DRIVE + ((float)i)*stepsize_tang_velocities;
+
+                    // Comply to minimal/maximal velocity
+                    if(tangential_velocity < 0)
+                            tangential_velocity = fmax( fmin(   -MIN_VEL_ABS_DRIVE
+                                                              , tangential_velocity)
+                                                    , -MAX_VEL_DRIVE);
+                    else
+                            tangential_velocity = fmin( fmax(   MIN_VEL_ABS_DRIVE
+                                                              , tangential_velocity)
+                                                    , MAX_VEL_DRIVE);           
+
+                    //For now do not allow stopped or backward velocities
+                    if(tangential_velocity <= 0)
+                        continue;
+
                     float rotational_velocity =  -( ((float)num_rot_velocities)/2.0 *stepsize_rot_velocities ) + ((float)j)*stepsize_rot_velocities;
                     float forward_t = ((float)k)*stepsize_dts;
 
