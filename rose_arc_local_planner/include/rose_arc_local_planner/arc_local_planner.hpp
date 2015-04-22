@@ -20,7 +20,7 @@
 #include <string>
 #include <cmath>
 
-#include <boost/timer/timer.hpp>
+#include <boost/progress.hpp>
 
 //for obstacle data access
 #include <costmap_2d/costmap_2d.h>

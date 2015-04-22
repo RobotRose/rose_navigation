@@ -550,7 +550,8 @@ void ArcLocalPlanner::publishPolygon(vector<rose_geometry::Point> transformed_fo
 
 bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, Twist& best_cmd_vel)
 {
-    boost::timer::auto_cpu_timer t;
+    boost::progress_timer timer;
+    
     // To be safe
     Twist all_zero;
     best_cmd_vel = all_zero;
