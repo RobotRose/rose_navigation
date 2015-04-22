@@ -204,8 +204,8 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
     }
 
     // Transform the global plan to our frame
-    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(2.0));
-    if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
+    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(0.05));
+    if ( not base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
     {
         ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
         return false;
