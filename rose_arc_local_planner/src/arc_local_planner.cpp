@@ -556,8 +556,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     Twist all_zero;
     best_cmd_vel = all_zero;
 
-    Trajectory                      simulation_plan;
-    std::vector<TrajectoryScore>    trajectories;
+    thread_safe::vector<geometry_msgs::PoseStamped> simulation_plan;
+    thread_safe::vector<TrajectoryScore>            trajectories;
     std::vector<TrajectoryScore>    valid_trajectories;
     float minx = 1e6;
     float miny = 1e6;
@@ -577,6 +577,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0425;
     float stepsize_dts              = 0.3;
 
+    #pragma omp for
     for(int i = 0; i < num_tang_velocities; i++)
     {
         // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
@@ -596,7 +597,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         if(tangential_velocity <= 0)
             continue;
 
-        #pragma omp for
         for(int j = 0; j < num_rot_velocities; j++)
         {
             // local_vel_.angular.z
@@ -653,14 +653,17 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     simulation_plan.push_back(stamped_pose);
                 }
                 
-                #pragma omp critical(dataupdate)
-                {
-                    trajectories.push_back(trajectory_score);
-                }
+                trajectories.push_back(trajectory_score);
             }
         }
     }
-    base_local_planner::publishPlan(simulation_plan, simulation_plan_pub_); 
+
+    // Threadsafe requires this
+    Trajectory sim_copy;
+    for(const auto& elem : simulation_plan)
+        sim_copy.push_back(elem);
+
+    base_local_planner::publishPlan(sim_copy, simulation_plan_pub_); 
 
     ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
     

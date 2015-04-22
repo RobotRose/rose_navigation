@@ -67,6 +67,7 @@
 #include "rose_common/common.hpp"
 #include "rose_conversions/conversions.hpp"
 #include "rose_geometry/point.hpp"
+#include "thread_safe_stl_containers/thread_safe_vector.h"
 #include "rose_twist_moving_average_filter/twist_maf.hpp"
 
 #include "server_multiple_client/server_multiple_client.hpp"
