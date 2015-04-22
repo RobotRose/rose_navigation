@@ -644,10 +644,15 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                     // Set path distance
                     geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 1, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+
                     trajectory_end_pose.header.frame_id = plan.begin()->header.frame_id;
                     trajectory_end_pose.pose.position.x = stamped_trajectory_end_point.data.x;
                     trajectory_end_pose.pose.position.y = stamped_trajectory_end_point.data.y;
-                    trajectory_end_pose.pose.position.z = stamped_trajectory_end_point.data.z;
+
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 2, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
+
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
                     
                     float end_point_distance_to_path    = rose_geometry::distanceXY(trajectory_end_pose.pose, plan.at(path_index).pose);
