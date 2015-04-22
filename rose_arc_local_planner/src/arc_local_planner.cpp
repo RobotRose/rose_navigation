@@ -249,8 +249,6 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
         // ROS_INFO_NAMED(ROS_NAME, "State: %d", state_);
         // ROS_DEBUG_NAMED(ROS_NAME, "prev_state_ is: %d", prev_state_);
 
-        ROS_WARN_ONCE_NAMED(ROS_NAME, "Remember to check if arc center is inside base, polygon is not correct at that moment! Use the new Footprint Collision Checker! TODO OH.");
-
         found_valid_cmd_vel_ = false;       
         do {
             StatemachineState new_state = DRIVE;
