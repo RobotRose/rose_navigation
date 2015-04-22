@@ -780,7 +780,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
-    // ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
+    ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
 
     TrajectoryScore best_trajectory;
     float best_ranking = -1e6;
