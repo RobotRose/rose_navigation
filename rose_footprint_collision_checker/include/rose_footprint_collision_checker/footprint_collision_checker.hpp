@@ -93,7 +93,8 @@ class FootprintCollisionChecker
     typedef std::vector<rose_geometry::Point> polygon;
     typedef std::vector<polygon> polygons;
 
-    Polygon         getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Path            getSweptPolygonPath(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Polygon         getSweptPolygonPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
     Paths           getSweptPolygonSubPaths(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
     Polygons        getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
     Path            unionPaths(const Paths& paths);

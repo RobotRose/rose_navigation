@@ -144,7 +144,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     }
     // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
     // Calculate and publish complete swept polygon
-    Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
+    Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
     // Polygons swept_polygon_sub_polys = getSweptPolygonSubPolys(trajectory, footprint_);
 
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
@@ -338,14 +338,14 @@ Polygon FootprintCollisionChecker::getPolygonAtPose(const geometry_msgs::PoseSta
         return transformed_polygon;
 }
 
-Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+Path FootprintCollisionChecker::getSweptPolygonPath(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
 {
+    return unionPaths(getSweptPolygonSubPaths(frame_of_motion_trajectory, polygon));
+}
 
-    // Union all polygons in the to be union-ed polygons list
-    Polygon unioned_polygon = unionPolygons(getSweptPolygonSubPolys(frame_of_motion_trajectory, polygon));
-
-    // Return the swept polygon
-    return unioned_polygon;
+Polygon FootprintCollisionChecker::getSweptPolygonPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+{
+    return unionPolygons(getSweptPolygonSubPolys(frame_of_motion_trajectory, polygon));
 }
 
 Paths FootprintCollisionChecker::getSweptPolygonSubPaths(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
