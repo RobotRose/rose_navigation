@@ -738,7 +738,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     for(auto it = trajectories.begin(); it != trajectories.end(); ++it)
       elements.push_back(&(*it));
 
-    #pragma omp parallel num_threads(8)
+    #pragma omp parallel num_threads(1)
     {        
         #pragma omp for
         // for (auto it = trajectories.begin(); it != trajectories.end(); ++it)
@@ -747,10 +747,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         { 
             auto& trajectory_score = *elements[i];
 
-            ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i, __FILE__, __LINE__, timer.elapsed());
             if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
             {
-                ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i,  __FILE__, __LINE__, timer.elapsed());
                 #pragma omp critical(shared_variables)
                 {
                     if(trajectory_score.score < min_dist)
@@ -770,14 +768,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     min_radius_diff         = fmin(min_radius_diff, radius_difference);
                     max_radius_diff         = fmax(max_radius_diff, radius_difference);
 
-                
                     valid_trajectories.push_back(trajectory_score);
-                    ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i, __FILE__, __LINE__, timer.elapsed());
                 }
             }
             else
             {
-                ROS_INFO("CHECK(%d) TIMING %s|%d: %2.6f", i, __FILE__, __LINE__, timer.elapsed());
                 collission_fails++;
             }
         }

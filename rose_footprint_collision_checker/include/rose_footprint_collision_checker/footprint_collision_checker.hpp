@@ -16,6 +16,7 @@
 #define FOOTPRINT_COLLISION_CHECKER_HPP
 
 #include <mutex>
+#include <boost/progress.hpp>
 
 #include <ros/ros.h>
 
