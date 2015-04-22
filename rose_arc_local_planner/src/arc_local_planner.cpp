@@ -550,7 +550,7 @@ void ArcLocalPlanner::publishPolygon(vector<rose_geometry::Point> transformed_fo
 
 bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, Twist& best_cmd_vel)
 {
-    boost::progress_timer timer;
+    boost::timer timer;
     
     // To be safe
     Twist all_zero;
@@ -576,6 +576,8 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_tang_velocities  = 0.05;
     float stepsize_rot_velocities   = 0.0475;
     float stepsize_dts              = 0.3;
+
+    ROS_INFO("TIMING %s|%s: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     #pragma omp parallel num_threads(8)
     {
