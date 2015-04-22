@@ -769,6 +769,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                 
                     valid_trajectories.push_back(trajectory_score);
+                    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
                 }
             }
             else
