@@ -27,7 +27,7 @@ namespace rose_navigation{
 #define MAX_ARRIVAL_ANGLE       M_PI*(4.0/4.0)
 #define AT_GOAL_DIST            0.05
 #define AT_GOAL_ANGLE           0.10
-#define CMD_VEL_MAF_WINDOW      1  
+#define CMD_VEL_MAF_WINDOW      2  
 
 PLUGINLIB_EXPORT_CLASS(rose_navigation::ArcLocalPlanner, nav_core::BaseLocalPlanner);
 
