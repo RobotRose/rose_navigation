@@ -577,7 +577,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0575;
     float stepsize_dts              = 0.3;
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     #pragma omp parallel num_threads(8)
     {
@@ -668,7 +668,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         }
     }   // Parallel section end
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     // Threadsafe requires this
     Trajectory sim_copy;
@@ -677,7 +677,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     base_local_planner::publishPlan(sim_copy, simulation_plan_pub_); 
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
     
@@ -696,7 +696,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     // Create polygon surrounding the circumscribed radius of the robot
     Polygon check_area_polygon = createBoundingPolygon(global_pose_.pose.position, transformed_footprint_, circumscribed_radius_ * 1.25);
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     publishPolygon(check_area_polygon, "check_area_polygon");
 
@@ -728,7 +728,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     // ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
     FCC_.addPoints(stamped_lethal_points);
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
     // ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for collisions.", (unsigned int)trajectories.size());
 
     // Normalize
@@ -778,7 +778,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         }
     }
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
 
@@ -822,7 +822,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         }
     }
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     if(not best_trajectory.trajectory.empty())
         best_cmd_vel = best_trajectory.velocity;
