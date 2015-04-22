@@ -740,7 +740,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     #pragma omp parallel num_threads(8)
     {        
-        #pragma omp for schedule(dynamic,10) 
+        #pragma omp for
         // for (auto it = trajectories.begin(); it != trajectories.end(); ++it)
         // for(auto& trajectory_score : trajectories)
         for(size_t i = 0; i < elements.size(); ++i) 
@@ -761,15 +761,13 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
                     if(trajectory_score.cost > max_cost)
                         max_cost = trajectory_score.cost;
-                }
 
-                // Determine minimal and maximal radius difference
-                float radius_difference = fabs(current_radius - radiusFromVelocity(trajectory_score.velocity)); 
-                min_radius_diff         = fmin(min_radius_diff, radius_difference);
-                max_radius_diff         = fmax(max_radius_diff, radius_difference);
+                    // Determine minimal and maximal radius difference
+                    float radius_difference = fabs(current_radius - radiusFromVelocity(trajectory_score.velocity)); 
+                    min_radius_diff         = fmin(min_radius_diff, radius_difference);
+                    max_radius_diff         = fmax(max_radius_diff, radius_difference);
 
-                #pragma omp critical(shared_variables)
-                {
+                
                     valid_trajectories.push_back(trajectory_score);
                 }
             }
