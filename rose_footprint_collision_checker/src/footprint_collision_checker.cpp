@@ -73,6 +73,7 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
     std::lock_guard<std::mutex> lock(points_mutex_);
 
     StampedVertices transformed_stamped_points;
+    std::map<std::string, geometry_msgs::PoseStamped> transformations;
     
     ROS_DEBUG_NAMED(ROS_NAME, "Transforming %d vertices to frame '%s'.", (int)stamped_points.size(), frame_id.c_str());
 
@@ -86,11 +87,11 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
             geometry_msgs::PoseStamped transformation;
 
             // Do we already have this transform looked-up and stored in the map
-            if(transformations_.find(stamped_lethal_point.header.frame_id) != transformations_.end()) 
+            if(transformations.find(stamped_lethal_point.header.frame_id) != transformations.end()) 
             {
                 // Load the transformation from the map
                 ROS_DEBUG_NAMED(ROS_NAME, "Loading transformation from lethal point in frame '%s' to frame of motion '%s' from transformations map.", in_frame.c_str(), frame_id.c_str());
-                transformation = transformations_.at(stamped_lethal_point.header.frame_id);
+                transformation = transformations.at(stamped_lethal_point.header.frame_id);
             }
             else
             {
@@ -104,7 +105,7 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
 
                 // Add to map
                 ROS_DEBUG_NAMED(ROS_NAME, "Adding transformation from '%s' -> '%s' to transformations map.", in_frame.c_str(), frame_id.c_str());
-                transformations_[stamped_lethal_point.header.frame_id] = transformation;
+                transformations[stamped_lethal_point.header.frame_id] = transformation;
             }
 
             // Transform to frame_id
