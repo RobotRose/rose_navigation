@@ -48,9 +48,9 @@ MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
     smc_->startServer();
 
     // Initialize subscribers
-    move_base_simple_goal_sub_ 	= n_.subscribe("/move_base_smc/simple_goal", 10, &MoveBaseSMC::CB_simpleGoal, this);
-    cmd_vel_sub_		 		= n_.subscribe("/cmd_vel", 10, &MoveBaseSMC::CB_commandVelocity, this);
-    manual_cmd_vel_sub_			= n_.subscribe("/manual_cmd_vel", 10, &MoveBaseSMC::CB_manualCommandVelocity, this);
+    move_base_simple_goal_sub_ 	= n_.subscribe("/move_base_smc/simple_goal", 1, &MoveBaseSMC::CB_simpleGoal, this);
+    cmd_vel_sub_		 		= n_.subscribe("/cmd_vel", 1, &MoveBaseSMC::CB_commandVelocity, this);
+    manual_cmd_vel_sub_			= n_.subscribe("/manual_cmd_vel", 1, &MoveBaseSMC::CB_manualCommandVelocity, this);
 
     // Initialize publishers
     drivetrain_state_pub_     	= n_.advertise<std_msgs::Int32>("/move_base_smc/drivetrain_state", 1);
@@ -63,7 +63,7 @@ MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
 	sh_bumper_pressed_.connect(ros::Duration(0.1));
 	sh_bumper_pressed_.registerChangeCallback(boost::bind(&MoveBaseSMC::CB_bumper_pressed, this,  _1));
 
-	// Monitor the emerceny button state
+	// Monitor the emergency button state
 	sh_emergency_.connect(ros::Duration(0.1));
 	sh_emergency_.registerChangeCallback(boost::bind(&MoveBaseSMC::CB_emergency, this,  _1));
 }
