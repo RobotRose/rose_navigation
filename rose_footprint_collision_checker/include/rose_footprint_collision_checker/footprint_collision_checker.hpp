@@ -117,6 +117,8 @@ class FootprintCollisionChecker
     std::mutex                  points_mutex_;
 
     bool    show_collissions_;
+
+    boost::timer* timer;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 

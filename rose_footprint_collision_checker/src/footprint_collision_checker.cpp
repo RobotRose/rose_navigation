@@ -22,6 +22,8 @@ FootprintCollisionChecker::FootprintCollisionChecker()
     , show_collissions_(false)
 {
     rviz_marker_pub_ = n_.advertise<visualization_msgs::Marker>( "footprint_collision_checker_debug", 0 );
+
+    timer = new boost::timer();
 }
 
 FootprintCollisionChecker::~FootprintCollisionChecker()
@@ -132,22 +134,21 @@ bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, c
 // Return true if a collision does occur
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
-    boost::timer timer;
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
     // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Calculate and publish complete swept polygon
     Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     bool collides = collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id));
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     
     if(collides)
     {
@@ -300,8 +301,8 @@ Polygon FootprintCollisionChecker::getPolygonAtPose(const geometry_msgs::PoseSta
 
 Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
 {
-    boost::timer timer;
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    timer = new boost::timer();
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     // Create a list of polygon's that will have to be unioned together later
     Polygons to_be_unioned_polygons;
@@ -325,7 +326,7 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
         for(const Vertex& vertex : polygon_at_pose)
             vertex_paths[vertex_path_id++].push_back(vertex); 
     }
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     // For each vertex path, append the vertex path of the next vertex in the original polygon, in reverse
     for(vertex_path_id = 0; vertex_path_id < polygon.size() ; vertex_path_id++)
@@ -359,36 +360,35 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
 
         }
     }
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     // Union all polygons in the to be union-ed polygons list
     Polygon unioned_polygon = unionPolygons(to_be_unioned_polygons);
 
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Return the swept polygon
     return unioned_polygon;
 }
 
 Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
 {
-    boost::timer timer;
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     if(polygons.size() == 1)
         return polygons.front();
 
     Paths solution;
     Clipper clipper;
     clipper.AddPaths(polygonsToPaths(polygons), ptSubject, true);
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // Get the union
     clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());   
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());   
 
     if(solution.size() > 1)
         ROS_WARN_NAMED(ROS_NAME, "Union solution contains > 1 (%d) polygons, continuing with first polygon. Consider a smaller timestep.", (int)solution.size());
 
     SimplifyPolygon(solution.front(), solution, pftNonZero);
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     // Make sure all the solution polygons are CCW
     clipper.Clear();
@@ -403,7 +403,7 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
 
         clipper.AddPath(path, ptSubject, true);
     }
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
 
     if(reversed_a_path)
@@ -412,10 +412,10 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
         solution.clear();
         clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     }
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     Polygons unioned_polygons = pathsToPolygons(solution);
-    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer.elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
 
     if(unioned_polygons.size() > 1)
         ROS_WARN_NAMED(ROS_NAME, "unioned_polygons contains > 1 (%d) polygons, returning first polygon. Consider a smaller timestep.", (int)unioned_polygons.size());
