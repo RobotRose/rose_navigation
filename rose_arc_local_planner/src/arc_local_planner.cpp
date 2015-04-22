@@ -579,7 +579,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
-    #pragma omp parallel num_threads(30)
+    #pragma omp parallel num_threads(8)
     {
         
         #pragma omp for schedule(dynamic,1) collapse(3)

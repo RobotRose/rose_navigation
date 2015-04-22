@@ -157,7 +157,8 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
-    Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_); // solution.front(); 
+    
+    Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
 
     ROS_INFO("swept_polygon_path.size() = %d", (int)swept_polygon_path.size());
     publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
