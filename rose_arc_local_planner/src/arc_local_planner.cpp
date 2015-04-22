@@ -569,11 +569,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     int num_tang_velocities         = 3;
     int num_rot_velocities          = 15;
-    int num_dts                     = 9;
+    int num_dts                     = 3;
 
     float stepsize_tang_velocities  = 0.04;
     float stepsize_rot_velocities   = 0.0425;
-    float stepsize_dts              = 0.15;
+    float stepsize_dts              = 0.3;
 
     #pragma omp parallel num_threads(8)
     {
