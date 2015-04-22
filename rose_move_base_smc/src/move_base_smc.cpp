@@ -22,7 +22,7 @@ MoveBaseSMC::MoveBaseSMC(ros::NodeHandle n, string name)
 	, sh_platform_controller_alarm_(SharedVariable<bool>("platform_controller_alarm"))
 	, sh_bumper_pressed_(SharedVariable<bool>("bumper_pressed"))
 	, sh_emergency_(SharedVariable<bool>("emergency"))
-	, velocity_watchdog_("move_base_smc_velocity_watchdog", boost::bind(&MoveBaseSMC::CB_cancelAllMovements, this))
+	, velocity_watchdog_("move_base_smc_velocity_watchdog", VELOCITY_TIMEOUT, boost::bind(&MoveBaseSMC::CB_cancelAllMovements, this))
 {
 	// Initialize SMC
 	smc_ = new SMC(n_, name_, boost::bind(&MoveBaseSMC::CB_moveBaseGoalReceived, this, _1, _2));

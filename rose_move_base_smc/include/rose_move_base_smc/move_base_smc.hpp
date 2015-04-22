@@ -30,6 +30,7 @@
 #include "rose_watchdogs/watchdog.hpp"
 
 #define SERVER_RESULT_CLIENTS_TIMEOUT 	0.5
+#define VELOCITY_TIMEOUT 				0.5
 
 using namespace std; 
 using namespace rose_shared_variables;
