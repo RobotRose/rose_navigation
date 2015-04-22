@@ -705,7 +705,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     // ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
     FCC_.addPoints(stamped_lethal_points);
 
-    // ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for colissions.", (unsigned int)trajectories.size());
+    // ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for collisions.", (unsigned int)trajectories.size());
 
     // Normalize
     //! @todo OH[IMPR]: Add cost of being close to walls
