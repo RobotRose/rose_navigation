@@ -133,7 +133,7 @@ bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, c
 // Return true if a collision does occur
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
-    timer = new boost::timer();
+    // timer = new boost::timer();
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // ROS_INFO_NAMED(ROS_NAME, "checkTrajectory");
 
