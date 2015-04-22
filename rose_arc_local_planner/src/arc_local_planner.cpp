@@ -626,11 +626,16 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.5, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
                     // Get the end point of the trajectory in the plan frame.
-                    // if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
-                    // {
-                    //     ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
-                    //     continue;
-                    // }
+                    geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+                    if( not rose_transformations::transformToFrame(*tf_listener_, plan.begin()->header.frame_id, trajectory_end_pose) )  
+                    {
+                        ROS_ERROR_NAMED(ROS_NAME, "Error transforming end pose of trajectory to frame of plan '%s'.", plan.begin()->header.frame_id.c_str());
+                        continue;
+                    }
+
+                    drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
+                    ROS_INFO("Original x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
+
 
                     // Transform to frame_id
                     rose_geometry::Point trajectory_end_point(trajectory_score.trajectory.back().pose.position);
@@ -643,17 +648,18 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     rose_geometry::rotatePointAroundOrigin(stamped_trajectory_end_point.data, -tf::getYaw(trajectory_score.trajectory.back().pose.orientation));
 
                     // Set path distance
-                    geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+                    // geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
+                    trajectory_end_pose = trajectory_score.trajectory.back();
 
                     drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10000, trajectory_end_pose.header.frame_id, 0.0, 0.0, 1.0);
-                    ROS_INFO("x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
+                    ROS_INFO("Before   x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     trajectory_end_pose.header.frame_id = plan.begin()->header.frame_id;
                     trajectory_end_pose.pose.position.x = stamped_trajectory_end_point.data.x;
                     trajectory_end_pose.pose.position.y = stamped_trajectory_end_point.data.y;
 
                     drawPoint(trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.x, 10001, trajectory_end_pose.header.frame_id, 0.0, 1.0, 1.0);
-                    ROS_INFO("x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
+                    ROS_INFO("After    x: %4.4f y: %4.4f frame: %s", trajectory_end_pose.pose.position.x, trajectory_end_pose.pose.position.y, trajectory_end_pose.header.frame_id.c_str());
 
                     int path_index = getClosestWaypointIndex(trajectory_end_pose, plan);
                     
