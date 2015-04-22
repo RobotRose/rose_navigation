@@ -148,11 +148,11 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     // Polygons swept_polygon_sub_polys = getSweptPolygonSubPolys(trajectory, footprint_);
 
     // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
-
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     bool collides = collision(swept_polygon, transformed_lethal_points);
-    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // for(const auto& sub_polygon : swept_polygon_sub_polys)
     // {
     //     if(collision(sub_polygon, transformed_lethal_points))
