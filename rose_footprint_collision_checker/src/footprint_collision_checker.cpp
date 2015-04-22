@@ -155,29 +155,12 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
      
     ClipperLib::MinkowskiSum(pattern, path, solution, false);
 
-    // Path path;
-    // Path pattern;
-    // Paths solution;
-     
-    // path.push_back(IntPoint((cInt)(3.0*POLYGON_PRECISION), (cInt)(4.0*POLYGON_PRECISION)));
-    // path.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(4.0*POLYGON_PRECISION)));
-    // path.push_back(IntPoint((cInt)(2.0*POLYGON_PRECISION), (cInt)(3.0*POLYGON_PRECISION)));
-    // path.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(2.0*POLYGON_PRECISION)));
-    // path.push_back(IntPoint((cInt)(3.0*POLYGON_PRECISION), (cInt)(2.0*POLYGON_PRECISION)));
-     
-    // pattern.push_back(IntPoint((cInt)(0.0*POLYGON_PRECISION), (cInt)(0.0*POLYGON_PRECISION)));
-    // pattern.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(0.0*POLYGON_PRECISION)));
-    // pattern.push_back(IntPoint((cInt)(1.0*POLYGON_PRECISION), (cInt)(1.0*POLYGON_PRECISION)));
-     
-    // ClipperLib::MinkowskiSum(pattern, path, solution, false);
-     
-
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
     Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_); // solution.front(); 
 
     ROS_INFO("swept_polygon_path.size() = %d", (int)swept_polygon_path.size());
-    publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
+    publishPolygon(pathToPolygon(solution.front()), frame_of_motion_.header.frame_id, "swept_polygon");
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
