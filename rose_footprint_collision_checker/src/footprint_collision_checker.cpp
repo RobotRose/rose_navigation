@@ -143,6 +143,24 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         return true;
     }
 
+    Path path = new Path();
+    Path pattern = new Path();
+    Paths solution = new Paths();
+     
+    //Greek capital sigma (sum sign) ... 
+    Int64[] ints1 = new Int64[] { 300, 400, 100, 400, 200, 300, 100, 200, 300, 200 };
+    path = IntsToPolygon(ints1);
+     
+    //diagonal brush pattern ...
+    Int64[] ints2 = new Int64[] { 4, -6, 6, -6, -4, 6, -6, 6 };
+    pattern = IntsToPolygon(ints2);
+     
+    solution = Clipper.MinkowskiSum(pattern, path, false);
+    //move 'pattern' to the end of 'path' ...
+    pattern = TranslatePath(pattern, 300, 200);
+     
+    //Display solution ± pattern ...
+
     // Calculate and publish complete swept polygon
     // Polygon swept_polygon = getSweptPolygonPolygon(trajectory, footprint_);
     Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
@@ -533,6 +551,14 @@ Path FootprintCollisionChecker::unionPaths(const Paths& paths)
 Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
 {
     return pathToPolygon(unionPaths(polygonsToPaths(polygons)));
+}
+
+Path FootprintCollisionChecker::trajectoryToPath(const Trajectory& trajectory)
+{
+    Path path;
+    for(const Vertex& vertex : polygon)
+        path.push_back( IntPoint((cInt)(trajectory.pose.position.x*POLYGON_PRECISION), (cInt)(vertex.pose.position.y*POLYGON_PRECISION)) );
+    return path;
 }
 
 Path FootprintCollisionChecker::polygonToPath(const Polygon& polygon)
