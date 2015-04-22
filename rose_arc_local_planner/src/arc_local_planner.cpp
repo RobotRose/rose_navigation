@@ -579,7 +579,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
 
     ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
-    #pragma omp parallel num_threads(8)
+    #pragma omp parallel num_threads(30)
     {
         
         #pragma omp for schedule(dynamic,1) collapse(3)
@@ -738,7 +738,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     for(auto it = trajectories.begin(); it != trajectories.end(); ++it)
       elements.push_back(&(*it));
 
-    #pragma omp parallel num_threads(1)
+    #pragma omp parallel num_threads(30)
     {        
         #pragma omp for
         // for (auto it = trajectories.begin(); it != trajectories.end(); ++it)
@@ -746,7 +746,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         for(size_t i = 0; i < elements.size(); ++i) 
         { 
             auto& trajectory_score = *elements[i];
-
             if( not FCC_.checkTrajectory(trajectory_score.trajectory) )
             {
                 #pragma omp critical(shared_variables)
