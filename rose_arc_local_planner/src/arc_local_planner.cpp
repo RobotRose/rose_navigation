@@ -575,7 +575,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float stepsize_rot_velocities   = 0.0425;
     float stepsize_dts              = 0.3;
 
-    #pragma omp parallel num_threads(1)
+    #pragma omp parallel num_threads(8)
     {
         
         #pragma omp for schedule(dynamic,1) collapse(3)
