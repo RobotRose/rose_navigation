@@ -94,6 +94,7 @@ class FootprintCollisionChecker
     typedef std::vector<polygon> polygons;
 
     Polygon         getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Paths           getSweptPolygonSubPaths(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
     Polygons        getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
     Path            unionPaths(const Paths& paths);
     Polygon         unionPolygons(const Polygons& polygons);

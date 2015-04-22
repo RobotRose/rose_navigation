@@ -136,7 +136,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
     timer = new boost::timer();
     // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
     // ROS_INFO_NAMED(ROS_NAME, "checkTrajectory");
-    
+
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
@@ -346,6 +346,63 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
 
     // Return the swept polygon
     return unioned_polygon;
+}
+
+Paths FootprintCollisionChecker::getSweptPolygonSubPaths(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+{
+
+    // Create a list of polygon's that will have to be union ed together later
+    Paths swept_polygon_sub_paths;
+
+    // Create a map to hold the path traced by all vertices in the polygon
+    int vertex_path_id = 0;
+    std::map<int, Path> vertex_paths;
+    std::map<int, Path> closed_vertex_paths;
+
+    // Loop trough all the poses of the frame_of_motion of the polygon
+    for(const geometry_msgs::PoseStamped& stamped_pose : frame_of_motion_trajectory)
+    {
+        // Get the path at a pose of the trajectory
+        Path path_at_pose = polygonToPath(getPolygonAtPose(stamped_pose, polygon));
+        
+        // Add this pose to the to be unioned polygons list
+        swept_polygon_sub_paths.push_back(path_at_pose);
+
+        // Add the vertexes of the path, at this pose of the trajectory, to their corresponding vertex path
+        vertex_path_id = 0;
+        for(const auto& vertex : path_at_pose)
+            vertex_paths[vertex_path_id++].push_back(vertex); 
+    }
+
+    // For each vertex path, append the vertex path of the next vertex in the original polygon, in reverse
+    for(vertex_path_id = 0; vertex_path_id < polygon.size() ; vertex_path_id++)
+    {
+        // Copy vertex path
+        closed_vertex_paths[vertex_path_id] = vertex_paths.at(vertex_path_id);
+
+        // Concatenate next vertex path in reverse
+        int next_index = (vertex_path_id + 1) % polygon.size();
+        closed_vertex_paths.at(vertex_path_id).insert   (   closed_vertex_paths.at(vertex_path_id).end(),
+                                                            vertex_paths.at(next_index).rbegin(),
+                                                            vertex_paths.at(next_index).rend() 
+                                                        );
+
+        ROS_DEBUG_NAMED(ROS_NAME, "Concatenated vertex paths %d and %d.", vertex_path_id, next_index);
+
+        // Close the path by adding the starting vertex
+        closed_vertex_paths.at(vertex_path_id).push_back(vertex_paths.at(vertex_path_id).front());
+
+        // Cleanup self intersections etc.
+        Paths simplified_vertex_path_paths;
+        SimplifyPolygon(closed_vertex_paths.at(vertex_path_id), simplified_vertex_path_paths, pftNonZero);
+
+
+        // Add the vertex path to the to be union-ed polygons list
+        for(const auto& path : simplified_vertex_path_paths)
+            swept_polygon_sub_paths.push_back(path);
+    }
+
+    return swept_polygon_sub_paths;
 }
 
 Polygons FootprintCollisionChecker::getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
