@@ -105,6 +105,7 @@ class FootprintCollisionChecker
     void getPoseDistance(const geometry_msgs::PoseStamped& pose_a, const geometry_msgs::PoseStamped& pose_b, float& euclidean_distance, float& rotation);
     Polygon createAABB(const Polygon& polygon, float margin);
     bool inAABB(const Vertex& point, const Polygon& aabb);
+    bool polyInAABB(const Polygon& polygon, const float& margin, const Vertex& point);
     
     void drawPose(ros::NodeHandle& n, const geometry_msgs::PoseStamped& stamped_pose, int id, float r, float g, float b);
     void publishPolygon(polygon transformed_footprint, std::string frame, std::string name);

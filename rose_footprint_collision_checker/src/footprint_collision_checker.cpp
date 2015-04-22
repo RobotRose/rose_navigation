@@ -230,10 +230,30 @@ Polygon FootprintCollisionChecker::createAABB(  const Polygon& polygon,
 
 bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
 {
-    if(point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y >  aabb.at(2).y)
-        return true;
+    return (point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y > aabb.at(2).y);
+}
 
-    return false;
+// Optimized?
+bool FootprintCollisionChecker::polyInAABB(const Polygon& polygon, const float& margin, const Vertex& point)
+{
+    float minx = 1e6;
+    float maxx = -1e6;
+    float miny = 1e6;
+    float maxy = -1e6;
+    for(const auto& point : polygon)
+    {
+        minx = fmin(point.x, minx);
+        maxx = fmax(point.x, maxx);
+        miny = fmin(point.y, miny);
+        maxy = fmax(point.y, maxy);
+    }
+
+    minx -= margin;
+    maxx += margin;
+    miny -= margin;
+    maxy += margin;
+
+    return (point.x < maxx and point.x > minx and point.y < maxy and point.y > miny);
 }
 
 bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
@@ -241,18 +261,20 @@ bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedV
     if(stamped_lethal_points.empty())
         return false;
 
-    Path path = polygonToPath(polygon);
     int id = 0;
     // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
-    Polygon aabb = createAABB(polygon, 0.001);
+    // Polygon aabb = createAABB(polygon, 0.001);
     for(const auto& stamped_lethal_point : stamped_lethal_points)
     {
         if(show_collissions_)
             drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
 
-        if(inAABB(stamped_lethal_point.data, aabb))
+        if(polyInAABB(polygon, 0.001, stamped_lethal_point.data))
+        {
+            Path path = polygonToPath(polygon);
             if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
                 return true;
+        }
     }
 
     return false;
