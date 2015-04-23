@@ -21,6 +21,8 @@ FootprintCollisionChecker::FootprintCollisionChecker()
     , max_forward_sim_time_(5.0)
     , show_collissions_(false)
 {
+    loadParameters();
+
     rviz_marker_pub_ = n_.advertise<visualization_msgs::Marker>( "footprint_collision_checker_debug", 0 );
 
     timer = new boost::timer();
@@ -29,16 +31,52 @@ FootprintCollisionChecker::FootprintCollisionChecker()
 FootprintCollisionChecker::~FootprintCollisionChecker()
 {}
 
-bool FootprintCollisionChecker::setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint)
+void FootprintCollisionChecker::loadParameters()
 {
-    frame_of_motion_    = frame_of_motion;
-    footprint_          = new_footprint;
+    // Get a normal nodehandle to load the configurable parameters
+    ros::NodeHandle n = ros::NodeHandle();
+
+    ROS_INFO("Loading '%s' parameters.", ros::this_node::getName().c_str());
+
+    XmlRpc::XmlRpcValue footprint;
+
+    ROS_ASSERT_MSG(n.getParam("footprint", footprint), "Parameter footprint must be specified."); 
+    ROS_ASSERT_MSG(footprint.getType() == XmlRpc::XmlRpcValue::TypeArray, "Parameter footprint is not of type 'XmlRpc::XmlRpcValue::TypeArray'.");
+
+    for (int i = 0; i < footprint.size(); ++i) 
+    {
+        XmlRpc::XmlRpcValue vertex = footprint[i];
+        ROS_ASSERT_MSG(vertex.getType() == XmlRpc::XmlRpcValue::TypeArray, "Footprint: Each entry should be a list of two doubles [x, y].");
+        ROS_ASSERT_MSG(vertex.size() == 2, "Footprint: Each entry should be a list of two doubles [x, y].");
+        ROS_ASSERT_MSG(vertex[0].getType() == XmlRpc::XmlRpcValue::TypeDouble, "Footprint: Each entry should be a list of two doubles [x, y].");
+        ROS_ASSERT_MSG(vertex[1].getType() == XmlRpc::XmlRpcValue::TypeDouble, "Footprint: Each entry should be a list of two doubles [x, y].");
+
+        footprint_.push_back(rose_geometry::Point(static_cast<double>(vertex[0]), static_cast<double>(vertex[1]), 0.0));
+    }
+
+    ROS_INFO("Loaded '%s' parameters.", ros::this_node::getName().c_str());
+}
+
+bool FootprintCollisionChecker::setFrameOfMotion(const geometry_msgs::PoseStamped& frame_of_motion)
+{
+    frame_of_motion_ = frame_of_motion;
+    return true;
+}
+
+bool FootprintCollisionChecker::setFootprint(const std::vector<rose_geometry::Point>& new_footprint)
+{
+    footprint_ = new_footprint;
     return true;
 }
 
 std::string FootprintCollisionChecker::getFrameOfMotion()
 {
     return frame_of_motion_.header.frame_id;
+}
+
+std::vector<rose_geometry::Point> FootprintCollisionChecker::getFootprint()
+{
+    return footprint_;
 }
 
 bool FootprintCollisionChecker::addPoints(const StampedVertices& new_lethal_points)

@@ -64,23 +64,27 @@ class FootprintCollisionChecker
     FootprintCollisionChecker();
     ~FootprintCollisionChecker();
 
-    bool    setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint);
-    std::string getFrameOfMotion();
-    bool    addPoints(const StampedVertices& new_lethal_points);
-    bool    clearPoints();
-    StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);
-    bool    checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t);
-    bool    checkTrajectory(const Trajectory& trajectory);
-    bool    pathCollission(const Path& path, const StampedVertices& lethal_points);
-    bool    polygonCollission(const Polygon& polygon, const StampedVertices& lethal_points);
-    Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt, const float& forward_t, const float& max_distance);
-    Polygon getPolygonAtPose( const geometry_msgs::PoseStamped& stamped_pose, 
-                                const std::vector<rose_geometry::Point>& footprint);
-    bool    setMaxDistance(float max_distance);
-    bool    setMaxForwardSimTime(float max_forward_sim_time);
+    void            loadParameters();
 
-    void    showCollisions();
-    void    hideCollisions();
+    bool            setFrameOfMotion(const geometry_msgs::PoseStamped& frame_of_motion);
+    bool            setFootprint(const std::vector<rose_geometry::Point>& new_footprint);
+    std::string     getFrameOfMotion();
+    std::vector<rose_geometry::Point>  getFootprint();
+    bool            addPoints(const StampedVertices& new_lethal_points);
+    bool            clearPoints();
+    StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);
+    bool            checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t);
+    bool            checkTrajectory(const Trajectory& trajectory);
+    bool            pathCollission(const Path& path, const StampedVertices& lethal_points);
+    bool            polygonCollission(const Polygon& polygon, const StampedVertices& lethal_points);
+    Trajectory      calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt, const float& forward_t, const float& max_distance);
+    Polygon         getPolygonAtPose( const geometry_msgs::PoseStamped& stamped_pose, 
+                                const std::vector<rose_geometry::Point>& footprint);
+    bool            setMaxDistance(float max_distance);
+    bool            setMaxForwardSimTime(float max_forward_sim_time);
+
+    void            showCollisions();
+    void            hideCollisions();
 
   protected:
     StampedVertices             lethal_points_;
