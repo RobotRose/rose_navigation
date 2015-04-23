@@ -180,6 +180,7 @@ bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
+    publishPolygon(pathToPolygon(footprint_), frame_of_motion_.header.frame_id, "footprint");
 
     Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
 
