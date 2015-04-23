@@ -94,7 +94,7 @@ void MoveBaseSMC::sendGoal(const move_base_msgs::MoveBaseGoal& goal_to_send)
 	{
 		ROS_INFO_NAMED(ROS_NAME, "Received goal in '%s' frame, sending goal to move_base node.", goal_to_send.target_pose.header.frame_id.c_str());
 		
-		// Could be that the previous goal was a relative goal therfore cancel the relative_positioning, if it did not had a goal notthing happens
+		// Could be that the previous goal was a relative goal therefore cancel the relative_positioning, if it did not had a goal notthing happens
 		smc_->cancelClient("relative_positioning");
 
 		move_base_msgs::MoveBaseGoal move_base_goal;
@@ -106,7 +106,7 @@ void MoveBaseSMC::sendGoal(const move_base_msgs::MoveBaseGoal& goal_to_send)
 	{
 		ROS_INFO_NAMED(ROS_NAME, "Received goal in '%s' frame, sending goal to relative_positioning node.", goal_to_send.target_pose.header.frame_id.c_str());
 		
-		// Could be that the previous goal was a relative goal therfore cancel the move_base, if it did not had a goal notthing happens
+		// Could be that the previous goal was a relative goal therefore cancel the move_base, if it did not had a goal notthing happens
 		smc_->cancelClient("move_base");
 
 		rose_relative_positioning::relative_positioningGoal relative_positioning_goal;
@@ -201,7 +201,7 @@ void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::TwistStamped::Co
 
     if ( not velocity_watchdog_.reset(cmd_vel->header) )
     {
-        ROS_WARN("Received velocity command is too old");
+        ROS_WARN("Received velocity command is too old.");
         return;
     }
 	// Send the manual command veloctiy that was revceived
@@ -210,7 +210,7 @@ void MoveBaseSMC::CB_manualCommandVelocity(const geometry_msgs::TwistStamped::Co
 
 void MoveBaseSMC::CB_driveControllerSuccess(const actionlib::SimpleClientGoalState& state, const rose_base_msgs::cmd_velocityResultConstPtr& client_result)
 {
-	ROS_DEBUG_NAMED(ROS_NAME, "Command velocity succesfully forwarded from /cmd_vel to drive controller SMC interface.");
+	ROS_DEBUG_NAMED(ROS_NAME, "Command velocity successfully forwarded from /cmd_vel to drive controller SMC interface.");
 }
 
 void MoveBaseSMC::CB_driveControllerFail(const actionlib::SimpleClientGoalState& state, const rose_base_msgs::cmd_velocityResultConstPtr& client_result)

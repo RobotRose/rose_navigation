@@ -22,6 +22,8 @@ FootprintCollisionChecker::FootprintCollisionChecker()
     , show_collissions_(false)
 {
     rviz_marker_pub_ = n_.advertise<visualization_msgs::Marker>( "footprint_collision_checker_debug", 0 );
+
+    timer = new boost::timer();
 }
 
 FootprintCollisionChecker::~FootprintCollisionChecker()
@@ -32,6 +34,11 @@ bool FootprintCollisionChecker::setFootprint(const geometry_msgs::PoseStamped& f
     frame_of_motion_    = frame_of_motion;
     footprint_          = new_footprint;
     return true;
+}
+
+std::string FootprintCollisionChecker::getFrameOfMotion()
+{
+    return frame_of_motion_.header.frame_id;
 }
 
 bool FootprintCollisionChecker::addPoints(const StampedVertices& new_lethal_points)
@@ -66,10 +73,10 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
     std::lock_guard<std::mutex> lock(points_mutex_);
 
     StampedVertices transformed_stamped_points;
+    std::map<std::string, geometry_msgs::PoseStamped> transformations;
     
     ROS_DEBUG_NAMED(ROS_NAME, "Transforming %d vertices to frame '%s'.", (int)stamped_points.size(), frame_id.c_str());
 
-    std::map<std::string, geometry_msgs::PoseStamped> transformations;
     for(const StampedVertex& stamped_lethal_point : stamped_points)
     {
         std::string in_frame = stamped_lethal_point.header.frame_id;
@@ -79,9 +86,8 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
         {
             geometry_msgs::PoseStamped transformation;
 
-
             // Do we already have this transform looked-up and stored in the map
-            if(transformations.find(stamped_lethal_point.header.frame_id) != transformations.end())
+            if(transformations.find(stamped_lethal_point.header.frame_id) != transformations.end()) 
             {
                 // Load the transformation from the map
                 ROS_DEBUG_NAMED(ROS_NAME, "Loading transformation from lethal point in frame '%s' to frame of motion '%s' from transformations map.", in_frame.c_str(), frame_id.c_str());
@@ -118,27 +124,36 @@ StampedVertices FootprintCollisionChecker::transformPointsToFrame(const StampedV
     return transformed_stamped_points;
 }
 
-// Return true if a collission does occure within forward_t
+// Return true if a collision does occur within forward_t
 bool FootprintCollisionChecker::checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t)
 {
-    return checkTrajectory(calculatePoseTrajectory(vel, 0.3, forward_t, max_distance_));
+    return checkTrajectory(calculatePoseTrajectory(vel, 0.2, forward_t, max_distance_));
 }
 
-// Return true if a collission does occure
+// Return true if a collision does occur
 bool FootprintCollisionChecker::checkTrajectory(const Trajectory& trajectory)
 {
+    // timer = new boost::timer();
+    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    // ROS_INFO_NAMED(ROS_NAME, "checkTrajectory");
+
     if(footprint_.size() <= 2)
     {
         ROS_WARN_NAMED(ROS_NAME, "Footprint not set correctly. The footprint needs to consist out of at least three points.");
         return true;
     }
-    // ROS_INFO_NAMED(ROS_NAME, "Checking trajectory.");
 
-    // Calculate and publish complete swept polygon
-    Polygon swept_polygon = getSweptPolygon(trajectory, footprint_);
-    // publishPolygon(swept_polygon, frame_of_motion_.header.frame_id, "swept_polygon");
+    Path swept_polygon_path = getSweptPolygonPath(trajectory, footprint_);
 
-    if(collision(swept_polygon, transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id)))
+    // publishPolygon(pathToPolygon(swept_polygon_path), frame_of_motion_.header.frame_id, "swept_polygon");
+    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    StampedVertices transformed_lethal_points = transformPointsToFrame(lethal_points_, frame_of_motion_.header.frame_id);   //! @todo OH [IMPR]: Transform the trajectory instead of the points.
+    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+    bool collides = pathCollission(swept_polygon_path, transformed_lethal_points);
+    // ROS_INFO("TIMING %s|%d: %2.10f", __FILE__, __LINE__, timer->elapsed());
+      
+    
+    if(collides)
     {
         // ROS_INFO_NAMED(ROS_NAME, "Collision detected.");
         return true;
@@ -173,8 +188,7 @@ void FootprintCollisionChecker::getPoseDistance(const geometry_msgs::PoseStamped
     rotation            = rose_geometry::getShortestSignedAngle(tf::getYaw(pose_a.pose.orientation), tf::getYaw(pose_b.pose.orientation));
 }
 
-Polygon FootprintCollisionChecker::createAABB(  const Polygon& polygon,
-                                                float margin)
+Polygon FootprintCollisionChecker::createAABB( const Polygon& polygon, float margin)
 {
     float minx = 1e6;
     float maxx = -1e6;
@@ -202,20 +216,68 @@ Polygon FootprintCollisionChecker::createAABB(  const Polygon& polygon,
     return bounding_polygon;
 }
 
-bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
+Polygon FootprintCollisionChecker::createAABB( const Path& path, float margin)
 {
-    if(point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y >  aabb.at(2).y)
-        return true;
+    float minx = 1e6;
+    float maxx = -1e6;
+    float miny = 1e6;
+    float maxy = -1e6;
+    for(const auto& point : path)
+    {
+        minx = fmin(point.X, minx);
+        maxx = fmax(point.X, maxx);
+        miny = fmin(point.Y, miny);
+        maxy = fmax(point.Y, maxy);
+    }
 
-    return false;
+    minx -= margin;
+    maxx += margin;
+    miny -= margin;
+    maxy += margin;
+
+    vector<rose_geometry::Point> bounding_polygon;
+    bounding_polygon.push_back(Vertex(maxx, maxy, 0.0)); 
+    bounding_polygon.push_back(Vertex(minx, maxy, 0.0));
+    bounding_polygon.push_back(Vertex(minx, miny, 0.0));
+    bounding_polygon.push_back(Vertex(maxx, miny, 0.0));
+
+    return bounding_polygon;
 }
 
-bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
+bool FootprintCollisionChecker::inAABB(const Vertex& point, const Polygon& aabb)
+{
+    return (point.x < aabb.at(0).x and point.x > aabb.at(2).x and point.y < aabb.at(0).y and point.y > aabb.at(2).y);
+}
+
+bool FootprintCollisionChecker::pathCollission(const Path& path, const StampedVertices& stamped_lethal_points)
 {
     if(stamped_lethal_points.empty())
         return false;
 
-    Path path = polygonToPath(polygon);
+    int id = 0;
+    // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
+    Polygon aabb = createAABB(path, 0.001);
+    for(const auto& stamped_lethal_point : stamped_lethal_points)
+    {
+        if(show_collissions_)
+            drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
+
+        // if(polyInAABB(polygon, 0.001, stamped_lethal_point.data))
+        if(inAABB(stamped_lethal_point.data, aabb))
+        {
+            if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool FootprintCollisionChecker::polygonCollission(const Polygon& polygon, const StampedVertices& stamped_lethal_points)
+{
+    if(stamped_lethal_points.empty())
+        return false;
+
     int id = 0;
     // ROS_INFO_NAMED(ROS_NAME, "FCC checking for collision using %d points and a polygon with %d vertices.", (int)stamped_lethal_points.size(), (int)path.size());
     Polygon aabb = createAABB(polygon, 0.001);
@@ -225,8 +287,11 @@ bool FootprintCollisionChecker::collision(const Polygon& polygon, const StampedV
             drawPoint(stamped_lethal_point, id++, 1.0, 0.0, 0.0);
 
         if(inAABB(stamped_lethal_point.data, aabb))
+        {
+            Path path = polygonToPath(polygon);
             if(PointInPolygon(IntPoint(stamped_lethal_point.data.x*POLYGON_PRECISION, stamped_lethal_point.data.y*POLYGON_PRECISION), path))
                 return true;
+        }
     }
 
     return false;
@@ -250,6 +315,7 @@ Trajectory FootprintCollisionChecker::calculatePoseTrajectory(  const geometry_m
     float at_t          = 0.0;
     float at_distance   = 0.0;
     Trajectory trajectory;
+
     do
     {          
         moving_pose         = rose_geometry::translatePose(moving_pose, translation);
@@ -287,10 +353,78 @@ Polygon FootprintCollisionChecker::getPolygonAtPose(const geometry_msgs::PoseSta
         return transformed_polygon;
 }
 
-Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+Path FootprintCollisionChecker::getSweptPolygonPath(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
 {
-    // Create a list of polygon's that will have to be unioned together later
-    Polygons to_be_unioned_polygons;
+    return unionPaths(getSweptPolygonSubPaths(frame_of_motion_trajectory, polygon));
+}
+
+Polygon FootprintCollisionChecker::getSweptPolygonPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+{
+    return unionPolygons(getSweptPolygonSubPolys(frame_of_motion_trajectory, polygon));
+}
+
+Paths FootprintCollisionChecker::getSweptPolygonSubPaths(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+{
+
+    // Create a list of polygon's that will have to be union ed together later
+    Paths swept_polygon_sub_paths;
+
+    // Create a map to hold the path traced by all vertices in the polygon
+    int vertex_path_id = 0;
+    std::map<int, Path> vertex_paths;
+    std::map<int, Path> closed_vertex_paths;
+
+    // Loop trough all the poses of the frame_of_motion of the polygon
+    for(const geometry_msgs::PoseStamped& stamped_pose : frame_of_motion_trajectory)
+    {
+        // Get the path at a pose of the trajectory
+        Path path_at_pose = polygonToPath(getPolygonAtPose(stamped_pose, polygon));
+        
+        // Add this pose to the to be unioned polygons list
+        swept_polygon_sub_paths.push_back(path_at_pose);
+
+        // Add the vertexes of the path, at this pose of the trajectory, to their corresponding vertex path
+        vertex_path_id = 0;
+        for(const auto& vertex : path_at_pose)
+            vertex_paths[vertex_path_id++].push_back(vertex); 
+    }
+
+    // For each vertex path, append the vertex path of the next vertex in the original polygon, in reverse
+    for(vertex_path_id = 0; vertex_path_id < polygon.size() ; vertex_path_id++)
+    {
+        // Copy vertex path
+        closed_vertex_paths[vertex_path_id] = vertex_paths.at(vertex_path_id);
+
+        // Concatenate next vertex path in reverse
+        int next_index = (vertex_path_id + 1) % polygon.size();
+        closed_vertex_paths.at(vertex_path_id).insert   (   closed_vertex_paths.at(vertex_path_id).end(),
+                                                            vertex_paths.at(next_index).rbegin(),
+                                                            vertex_paths.at(next_index).rend() 
+                                                        );
+
+        ROS_DEBUG_NAMED(ROS_NAME, "Concatenated vertex paths %d and %d.", vertex_path_id, next_index);
+
+        // Close the path by adding the starting vertex
+        closed_vertex_paths.at(vertex_path_id).push_back(vertex_paths.at(vertex_path_id).front());
+
+        // Cleanup self intersections etc.
+        Paths simplified_vertex_path_paths;
+        SimplifyPolygon(closed_vertex_paths.at(vertex_path_id), simplified_vertex_path_paths, pftNonZero);
+
+
+        // Add the vertex path to the to be union-ed polygons list
+        for(const auto& path : simplified_vertex_path_paths)
+            swept_polygon_sub_paths.push_back(path);
+    }
+
+    return swept_polygon_sub_paths;
+}
+
+Polygons FootprintCollisionChecker::getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon)
+{
+
+    // Create a list of polygon's that will have to be union ed together later
+    Polygons swept_polygon_sub_polys;
 
     // Create a map to hold the path traced by all vertices in the polygon
     int vertex_path_id = 0;
@@ -304,7 +438,7 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
         Polygon polygon_at_pose = getPolygonAtPose(stamped_pose, polygon);
         
         // Add this pose to the to be unioned polygons list
-        to_be_unioned_polygons.push_back(polygon_at_pose);
+        swept_polygon_sub_polys.push_back(polygon_at_pose);
 
         // Add the vertexes of the polygon, at this pose of the trajectory, to their corresponding vertex path
         vertex_path_id = 0;
@@ -339,42 +473,38 @@ Polygon FootprintCollisionChecker::getSweptPolygon(const Trajectory& frame_of_mo
 
         for(const auto& polygon : simplified_vertex_path_polygons)
         {
-            // Add the vertex path to the to be unioned polygons list
-            to_be_unioned_polygons.push_back(polygon);
+            // Add the vertex path to the to be union-ed polygons list
+            swept_polygon_sub_polys.push_back(polygon);
 
         }
     }
 
-    // Union all polygons in the to be unioned polygons list
-    Polygon unioned_polygon = unionPolygons(to_be_unioned_polygons);
-
-    // Return the swept polygon
-    return unioned_polygon;
+    return swept_polygon_sub_polys;
 }
 
-Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
+Path FootprintCollisionChecker::unionPaths(const Paths& paths)
 {
-    if(polygons.size() == 1)
-        return polygons.front();
+    if(paths.size() == 1)
+        return paths.front();
 
     Paths solution;
     Clipper clipper;
-    clipper.AddPaths(polygonsToPaths(polygons), ptSubject, true);
-
+    clipper.AddPaths(paths, ptSubject, true);
+    
     // Get the union
-    clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
-       
+    clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);   
+
     if(solution.size() > 1)
-        ROS_WARN_NAMED(ROS_NAME, "Union solution contains > 1 (%d) polygons, continuing with first polygon. Consider a smaller timestep.", (int)solution.size());
+        ROS_WARN_NAMED(ROS_NAME, "Union solution contains > 1 (%d) paths, continuing with first polygon. Consider a smaller timestep.", (int)solution.size());
 
     SimplifyPolygon(solution.front(), solution, pftNonZero);
 
-    // Make sure all the solution polygons are CCW
+    // Make sure all the solution paths are CCW
     clipper.Clear();
     bool reversed_a_path = false;
     for(auto path : solution)
     {
-        if(!Orientation(path))
+        if( not Orientation(path) )
         {
             ReversePath(path);
             reversed_a_path = true;
@@ -390,12 +520,23 @@ Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
         clipper.Execute(ctUnion, solution, pftNonZero, pftNonZero);
     }
 
-    Polygons unioned_polygons = pathsToPolygons(solution);
+    if(solution.size() > 1)
+        ROS_WARN_NAMED(ROS_NAME, "solution contains > 1 (%d) polygons, returning first polygon. Consider a smaller timestep.", (int)solution.size());
 
-    if(unioned_polygons.size() > 1)
-        ROS_WARN_NAMED(ROS_NAME, "unioned_polygons contains > 1 (%d) polygons, returning first polygon. Consider a smaller timestep.", (int)unioned_polygons.size());
+    return solution.front();
+}
 
-    return unioned_polygons.front();
+Polygon FootprintCollisionChecker::unionPolygons(const Polygons& polygons)
+{
+    return pathToPolygon(unionPaths(polygonsToPaths(polygons)));
+}
+
+Path FootprintCollisionChecker::trajectoryToPath(const Trajectory& trajectory)
+{
+    Path path;
+    for(const auto& stamped_pose : trajectory)
+        path.push_back( IntPoint((cInt)(stamped_pose.pose.position.x*POLYGON_PRECISION), (cInt)(stamped_pose.pose.position.y*POLYGON_PRECISION)) );
+    return path;
 }
 
 Path FootprintCollisionChecker::polygonToPath(const Polygon& polygon)

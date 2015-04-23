@@ -60,7 +60,7 @@ catkin_package(
         eigen
 )
 
-set(CMAKE_CXX_FLAGS "-std=c++0x -g") # TODO OH: -g is DEBUG FLAG
+set(CMAKE_CXX_FLAGS "-fopenmp -std=c++0x -g") # TODO OH: -g is DEBUG FLAG
 
 include_directories(
     include

@@ -16,6 +16,7 @@
 #define FOOTPRINT_COLLISION_CHECKER_HPP
 
 #include <mutex>
+#include <boost/progress.hpp>
 
 #include <ros/ros.h>
 
@@ -64,12 +65,14 @@ class FootprintCollisionChecker
     ~FootprintCollisionChecker();
 
     bool    setFootprint(const geometry_msgs::PoseStamped& frame_of_motion, const std::vector<rose_geometry::Point>& new_footprint);
+    std::string getFrameOfMotion();
     bool    addPoints(const StampedVertices& new_lethal_points);
     bool    clearPoints();
     StampedVertices transformPointsToFrame(const StampedVertices& stamped_points, const std::string& frame_id);
     bool    checkVelocity(const geometry_msgs::Twist& vel, const float& forward_t);
     bool    checkTrajectory(const Trajectory& trajectory);
-    bool    collision(const Polygon& polygon, const StampedVertices& lethal_points);
+    bool    pathCollission(const Path& path, const StampedVertices& lethal_points);
+    bool    polygonCollission(const Polygon& polygon, const StampedVertices& lethal_points);
     Trajectory calculatePoseTrajectory(const geometry_msgs::Twist& vel, const float& dt, const float& forward_t, const float& max_distance);
     Polygon getPolygonAtPose( const geometry_msgs::PoseStamped& stamped_pose, 
                                 const std::vector<rose_geometry::Point>& footprint);
@@ -91,8 +94,13 @@ class FootprintCollisionChecker
     typedef std::vector<rose_geometry::Point> polygon;
     typedef std::vector<polygon> polygons;
 
-    Polygon         getSweptPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Path            getSweptPolygonPath(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Polygon         getSweptPolygonPolygon(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Paths           getSweptPolygonSubPaths(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Polygons        getSweptPolygonSubPolys(const Trajectory& frame_of_motion_trajectory, const Polygon& polygon);
+    Path            unionPaths(const Paths& paths);
     Polygon         unionPolygons(const Polygons& polygons);
+    Path            trajectoryToPath(const Trajectory& trajectory);
     Path            polygonToPath(const Polygon& polygon);
     Paths           polygonsToPaths(const Polygons& polygons);
     Polygon         pathToPolygon(const Path& path);
@@ -101,6 +109,7 @@ class FootprintCollisionChecker
     void getTrajectoryDistance(const Trajectory& trajectory, float& euclidean_distance, float& rotation);
     void getPoseDistance(const geometry_msgs::PoseStamped& pose_a, const geometry_msgs::PoseStamped& pose_b, float& euclidean_distance, float& rotation);
     Polygon createAABB(const Polygon& polygon, float margin);
+    Polygon createAABB(const Path& path, float margin);
     bool inAABB(const Vertex& point, const Polygon& aabb);
     
     void drawPose(ros::NodeHandle& n, const geometry_msgs::PoseStamped& stamped_pose, int id, float r, float g, float b);
@@ -115,6 +124,8 @@ class FootprintCollisionChecker
     std::mutex                  points_mutex_;
 
     bool    show_collissions_;
+
+    boost::timer* timer;
 };
 
 #endif // FOOTPRINT_COLLISION_CHECKER_HPP 
