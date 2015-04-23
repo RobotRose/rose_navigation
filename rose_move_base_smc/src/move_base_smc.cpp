@@ -274,8 +274,7 @@ void MoveBaseSMC::CB_bumper_pressed(const bool& new_value)
 	ROS_WARN_NAMED(ROS_NAME, "CB_bumper_pressed");
 	if(new_value == true)
 	{
-		stop();
-		operator_gui.warn("Gestopt met rijden vanwege ingedrukte bumper.");
+		operator_gui.warn("Ingedrukte bumper.");
 	}
 }
 
@@ -285,7 +284,7 @@ void MoveBaseSMC::CB_emergency(const bool& new_value)
 	if(new_value == true)
 	{
 		stop();
-		operator_gui.warn("Gestopt met rijden vanwege ingedrukte noodstop.");
+		operator_gui.warn("Gestopt met rijden vanwege nood toestand.");
 	}
 }
 

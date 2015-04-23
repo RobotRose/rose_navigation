@@ -84,7 +84,7 @@ void ArcLocalPlanner::initialize(string name, tf::TransformListener* tf_listener
         frame_of_motion.header.frame_id     = robot_base_frame_;
         frame_of_motion.pose.orientation.w  = 1.0;
 
-        FCC_.setFootprint(frame_of_motion, footprint_);
+        FCC_.setFrameOfMotion(frame_of_motion);
 
         // Get a nodehandle 
         pn_ = ros::NodeHandle("~");
