@@ -81,8 +81,8 @@ void ArcLocalPlanner::initialize(string name, tf::TransformListener* tf_listener
         footprint_          = vector<rose_geometry::Point>(footprint_ros.begin(), footprint_ros.end());
 
         geometry_msgs::PoseStamped frame_of_motion; 
-        frame_of_motion.header.frame_id = "base_link";
-        frame_of_motion.pose.orientation.w = 1.0;
+        frame_of_motion.header.frame_id     = robot_base_frame_;
+        frame_of_motion.pose.orientation.w  = 1.0;
 
         FCC_.setFootprint(frame_of_motion, footprint_);
 
@@ -168,7 +168,7 @@ bool ArcLocalPlanner::setPlan(const vector<PoseStamped>& plan)
     updateRobotState();
 
     // Transform the global plan to our frame
-    tf_listener_->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(2.0));
+    tf_listener_->waitForTransform(global_frame_, robot_base_frame_, ros::Time::now(), ros::Duration(2.0));
     if (!base_local_planner::transformGlobalPlan(*tf_listener_, global_plan_, global_pose_tf_, *costmap_, global_frame_, transformed_plan_)) 
     {
         ROS_WARN_NAMED(ROS_NAME, "Could not transform the global plan to the frame of the controller");
@@ -522,7 +522,8 @@ bool ArcLocalPlanner::computeVelocityCommands(Twist& cmd_vel)
 void ArcLocalPlanner::publishPolygon(vector<rose_geometry::Point> transformed_footprint, string name)
 {
     // Check if publisher with this name already exists
-    if ( footprint_pubs_.find(name) == footprint_pubs_.end() ) {
+    if ( footprint_pubs_.find(name) == footprint_pubs_.end() ) 
+    {
         // Not found, add it
         ros::Publisher footprint_pub;
         footprint_pubs_.insert(pair<string, ros::Publisher>(name, footprint_pub));
@@ -550,8 +551,6 @@ void ArcLocalPlanner::publishPolygon(vector<rose_geometry::Point> transformed_fo
 
 bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, Twist& best_cmd_vel)
 {
-    boost::timer timer;
-    
     // To be safe
     Twist all_zero;
     best_cmd_vel = all_zero;
@@ -570,31 +569,20 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     float current_radius  = currentRadius();
 
     int num_tang_velocities         = 5;
-    int num_rot_velocities          = 13;
+    int num_rot_velocities          = 14;
     int num_dts                     = 3;
 
     float stepsize_tang_velocities  = 0.025;
-    float stepsize_rot_velocities   = 0.0575;
+    float stepsize_rot_velocities   = 0.0475;
     float stepsize_dts              = 0.4;
-
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     #pragma omp parallel num_threads(8)
     {
-        
         #pragma omp for schedule(dynamic,1) collapse(3)
         for(int i = 0; i < num_tang_velocities; ++i)
         {
-            
-
             for(int j = 0; j < num_rot_velocities; ++j)
             {
-                // local_vel_.angular.z
-                
-
-                // if(fabs(rotational_velocity) < MIN_VEL_THETA)
-                //  continue;
-
                 for(int k = 1; k < num_dts; ++k)
                 {
                     // local_vel_.linear.x + ((float)num_tang_velocities/-2.0)*stepsize_tang_velocities +
@@ -624,7 +612,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     TrajectoryScore trajectory_score;
                     trajectory_score.velocity   = velocity;
                     // + 0.75 + local_vel_.linear.x*(1.5/0.25)
-                    trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 1.5, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
+                    trajectory_score.trajectory = FCC_.calculatePoseTrajectory(trajectory_score.velocity, stepsize_dts, forward_t + 2.0, 3.0);  //! @todo OH [IMPR]: Let extra forward sim time depend on acceleration.
 
                     // Get the end point of the trajectory in the plan frame.
                     geometry_msgs::PoseStamped trajectory_end_pose = trajectory_score.trajectory.back();
@@ -653,7 +641,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                     // Visualize cmd_vels       
                     PoseStamped stamped_pose;
                     stamped_pose.header.stamp       = ros::Time::now();
-                    stamped_pose.header.frame_id    = "base_link";
+                    stamped_pose.header.frame_id    = robot_base_frame_;
                     for(const auto& trajectory_pose : trajectory_score.trajectory)
                     {                   
                         stamped_pose.pose.position.x    = trajectory_pose.pose.position.x;
@@ -668,35 +656,17 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         }
     }   // Parallel section end
 
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
-
-    // Threadsafe requires this
+    // Copy from threadsafe::vector to (publishable) normal std::vetor
     Trajectory sim_copy;
     for(const auto& elem : simulation_plan)
         sim_copy.push_back(elem);
 
     base_local_planner::publishPlan(sim_copy, simulation_plan_pub_); 
 
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
-
     ROS_INFO_NAMED(ROS_NAME, "Found %d command velocities. Fails: dist %d", (unsigned int)trajectories.size(), distance_fails);
-    
-    //! @todo OH [IMPR]: Use only selected part of the map around the trajectory with margin of circumscribed radius.
-    // Polygon bounding_box;
-    // Vertex vertex;
-    // vertex = Vertex(maxx + circumscribed_radius_, maxy + circumscribed_radius_);
-    // bounding_box.push_back(vertex);
-    // vertex = Vertex(minx - circumscribed_radius_, maxy + circumscribed_radius_);
-    // bounding_box.push_back(vertex);
-    // vertex = Vertex(minx - circumscribed_radius_, miny - circumscribed_radius_);
-    // bounding_box.push_back(vertex);
-    // vertex = Vertex(maxx + circumscribed_radius_, miny - circumscribed_radius_);
-    // bounding_box.push_back(vertex);
 
     // Create polygon surrounding the circumscribed radius of the robot
     Polygon check_area_polygon = createBoundingPolygon(global_pose_.pose.position, transformed_footprint_, circumscribed_radius_ * 1.25);
-
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     publishPolygon(check_area_polygon, "check_area_polygon");
 
@@ -711,7 +681,7 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
     FCC_.clearPoints();
     // Get lethal cells surrounding the robot
     vector<rose_geometry::Point> lethal_points = getCellsPoints(getLethalCellsInPolygon(check_area_polygon), true, transformed_footprint_);
-    // ROS_INFO_NAMED(ROS_NAME, "%d lethal points.", (unsigned int)lethal_points.size());
+
     StampedVertices stamped_lethal_points;
     for(const auto& lethal_point : lethal_points)
     {
@@ -723,17 +693,11 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
         stamped_lethal_points.push_back( stamped_vertex );
     }
 
-    // ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
-
-    // ROS_INFO_NAMED(ROS_NAME, "Adding %d lethal points.", (unsigned int)stamped_lethal_points.size());
     FCC_.addPoints(stamped_lethal_points);
 
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
     // ROS_INFO_NAMED(ROS_NAME, "Checking %d command velocities for collisions.", (unsigned int)trajectories.size());
 
     // Normalize
-    //! @todo OH[IMPR]: Add cost of being close to walls
-
     #pragma omp parallel num_threads(1)
     {        
         #pragma omp for
@@ -765,7 +729,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
                 }
 
                 valid_trajectories.push_back(trajectory_score);
-
             }
             else
             {
@@ -773,8 +736,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
             }
         }
     }
-
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     ROS_INFO_NAMED(ROS_NAME, "Found %d valid command velocities, %d colliding command velocities.", (unsigned int)valid_trajectories.size(), collission_fails);
 
@@ -817,8 +778,6 @@ bool ArcLocalPlanner::findBestCommandVelocity(const vector<PoseStamped>& plan, T
             best_trajectory         = trajectory;
         }
     }
-
-    ROS_INFO("TIMING %s|%d: %2.6f", __FILE__, __LINE__, timer.elapsed());
 
     if(not best_trajectory.trajectory.empty())
         best_cmd_vel = best_trajectory.velocity;
@@ -1232,7 +1191,6 @@ VelCalcResult ArcLocalPlanner::calculateRotateVelocityCommand(Twist& cmd_vel)
         }
     }
 }
-
 
 // return = 0 is Failed 
 // return = 1 is Busy 
